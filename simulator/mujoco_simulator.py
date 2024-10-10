@@ -1,12 +1,11 @@
 import mujoco_py
 import os
 
-
 class StretchMujocoSimulator:
     def __init__(self, scene_path: str):
         """
         Initialize the Stretch Mujoco Simulator with a scene file.
-
+        
         Args:
             scene_path (str): Path to the Mujoco XML scene file.
         """
@@ -29,7 +28,7 @@ class StretchMujocoSimulator:
     def place_object(self, obj):
         """
         Place an object in the simulation environment.
-
+        
         Args:
             obj (Object): The object to place.
         """
@@ -49,7 +48,7 @@ class StretchMujocoSimulator:
     def move_to(self, part: str, coords):
         """
         Move a part of the robot to the specified coordinates.
-
+        
         Args:
             part (str): Part of the robot to move (e.g., 'base', 'gripper').
             coords (tuple): Target coordinates (x, y, theta).
@@ -60,7 +59,7 @@ class StretchMujocoSimulator:
     def set_base_velocity(self, linear, angular):
         """
         Set the base velocity of the robot.
-
+        
         Args:
             linear (float): Linear velocity.
             angular (float): Angular velocity.
