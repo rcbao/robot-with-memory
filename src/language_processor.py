@@ -1,9 +1,17 @@
 # /src/language_processor.py
 
 import os
-import openai
+import json
+from openai import OpenAI
 from typing import Tuple, Optional
+from dotenv import load_dotenv
 
+load_dotenv()
+
+client = OpenAI()
+
+def clean_code_block(s: str) -> str:
+    return s.removeprefix("```json").removesuffix("```").strip()
 
 class LanguageProcessor:
     def __init__(self, api_key: Optional[str] = None):
@@ -18,7 +26,6 @@ class LanguageProcessor:
             raise ValueError(
                 "OpenAI API key not provided. Set the 'OPENAI_API_KEY' environment variable."
             )
-        openai.api_key = self.api_key
 
     def interpret_user_prompt(
         self, user_prompt: str
@@ -44,8 +51,8 @@ class LanguageProcessor:
         )
 
         try:
-            response = openai.ChatCompletion.create(
-                model="gpt-4",
+            response = client.chat.completions.create(
+                model="gpt-4o",
                 messages=[
                     {
                         "role": "system",
@@ -57,10 +64,9 @@ class LanguageProcessor:
                 temperature=0,
             )
 
-            response_content = response.choices[0].message["content"].strip()
-            # Attempt to parse JSON from the response
-            import json
-
+            response_content = response.choices[0].message.content.strip()
+            print(response_content)
+            response_content = clean_code_block(response_content)
             parsed = json.loads(response_content)
 
             relevancy = parsed.get("relevancy", False)
@@ -90,8 +96,8 @@ class LanguageProcessor:
         )
 
         try:
-            response = openai.ChatCompletion.create(
-                model="gpt-4",
+            response = client.chat.completions.create(
+                model="gpt-4o",
                 messages=[
                     {
                         "role": "system",
@@ -103,7 +109,10 @@ class LanguageProcessor:
                 temperature=0.7,
             )
 
-            response_content = response.choices[0].message["content"].strip()
+            
+
+            response_content = response.choices[0].message.content.strip()
+            print(response_content)
             return response_content
 
         except Exception as e:

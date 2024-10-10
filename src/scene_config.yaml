@@ -1,0 +1,16 @@
+# /simulator/scene_config.yaml
+
+# Example configuration for ManiSkill environment
+# Adjust parameters as needed
+
+env_name: "fetch_and_place"
+robot_type: "stretch"
+task: "fetch_and_place"
+initial_robot_position: [0.0, 0.0, 0.0]
+objects:
+  - name: "red cup"
+    position: [1.0, 2.0, 0.0]
+    type: "cup"
+  - name: "blue notebook"
+    position: [3.0, 1.5, 0.0]
+    type: "notebook"

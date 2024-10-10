@@ -4,18 +4,15 @@ import cv2
 from ultralytics import YOLO
 from typing import List
 from object import Object  # Ensure object.py contains the Object class
-from simulator.mujoco_simulator import StretchMujocoSimulator
-
+from maniskill_simulator import ManiSkillSimulator
 
 class VisionSystem:
-    def __init__(
-        self, simulator: StretchMujocoSimulator, model_path: str = "models/yolov8n.pt"
-    ):
+    def __init__(self, simulator: ManiSkillSimulator, model_path: str = "models/yolov8n.pt"):
         """
         Initialize the Vision System with YOLOv8 model and simulator.
 
         Args:
-            simulator (StretchMujocoSimulator): The robot simulator instance.
+            simulator (ManiSkillSimulator): The robot simulator instance.
             model_path (str): Path to the YOLOv8 model file.
         """
         self.simulator = simulator
@@ -28,14 +25,10 @@ class VisionSystem:
         Returns:
             Any: The captured image in a format compatible with YOLOv8 (e.g., numpy array).
         """
-        # Assuming the simulator has a method to get camera images
-        # This method should return an image as a numpy array (BGR format)
         image = self.simulator.get_camera_image()
         return image
 
-    def identify_objects_in_robot_view(
-        self, confidence_threshold: float = 0.5
-    ) -> List[Object]:
+    def identify_objects_in_robot_view(self, confidence_threshold: float = 0.5) -> List[Object]:
         """
         Detect objects in the current robot view using YOLOv8.
 
@@ -67,24 +60,21 @@ class VisionSystem:
                 class_name = self.model.names[class_id]
 
                 # Optional: Extract additional details if needed
-                # For simplicity, using class name as detail
                 detail = class_name
 
                 # Simulate 3D coordinates based on bounding box center
-                # Note: In a real scenario, you'd use depth information or simulator data
+                # In ManiSkill, you might have access to more accurate positioning
                 center_x = (xmin + xmax) / 2
                 center_y = (ymin + ymax) / 2
                 center_z = 0.0  # Placeholder for Z-coordinate
 
-                location_description = (
-                    f"Detected at pixel coordinates ({center_x:.2f}, {center_y:.2f})"
-                )
+                location_description = f"Detected at pixel coordinates ({center_x:.2f}, {center_y:.2f})"
 
                 detected_object = Object(
                     name=class_name,
                     detail=detail,
                     location_description=location_description,
-                    location_3d_coords=(center_x, center_y, center_z),
+                    location_3d_coords=(center_x, center_y, center_z)
                 )
                 detected_objects.append(detected_object)
 

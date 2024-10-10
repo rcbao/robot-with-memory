@@ -5,16 +5,16 @@ from vision import VisionSystem
 from movement import MovementSystem
 from language_processor import LanguageProcessor
 from command_handler import CommandHandler
-from simulator.mujoco_simulator import StretchMujocoSimulator
+from maniskill_simulator import ManiSkillSimulator
 
 
 class Robot:
-    def __init__(self, simulator: StretchMujocoSimulator):
+    def __init__(self, simulator: ManiSkillSimulator):
         """
         Initialize the Robot with its core components.
 
         Args:
-            simulator (StretchMujocoSimulator): The robot simulator instance.
+            simulator (ManiSkillSimulator): The robot simulator instance.
         """
         self.memory = Memory()
         self.vision = VisionSystem(simulator)

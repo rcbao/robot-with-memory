@@ -166,7 +166,7 @@ class CommandHandler:
 
     def interpret_user_prompt(
         self, user_prompt: str
-    ) -> Tuple[bool, Optional[str], Optional[str], Optional[str]]:
+    ) -> tuple[bool, Optional[str], Optional[str], Optional[str]]:
         """
         Interpret the user's prompt to determine action and object details.
 
