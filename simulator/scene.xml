@@ -1,0 +1,21 @@
+<!-- /simulator/scene.xml -->
+<mujoco>
+    <worldbody>
+        <!-- Define the robot here -->
+        <body name="robot" pos="0 0 0">
+            <!-- Robot joints and links -->
+        </body>
+        
+        <!-- Define the kitchen table -->
+        <geom name="kitchen_table" type="box" size="1 0.5 0.75" pos="1 2 0"/>
+        
+        <!-- Define the red cup -->
+        <body name="red_cup" pos="1 2 0.75">
+            <geom type="cylinder" size="0.05 0.1" rgba="1 0 0 1"/>
+        </body>
+    </worldbody>
+    
+    <asset>
+        <!-- Textures and materials if needed -->
+    </asset>
+</mujoco>
