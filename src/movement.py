@@ -6,11 +6,10 @@ import numpy as np
 import logging
 import math
 import torch
-from scipy.spatial.transform import Rotation as R  # Added for quaternion conversion
-
+from scipy.spatial.transform import Rotation as R
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 class MovementSystem:
@@ -22,44 +21,49 @@ class MovementSystem:
             simulator (ManiSkillSimulator): The robot simulator instance.
         """
         self.simulator = simulator
-        logging.info("MovementSystem initialized with ManiSkillSimulator.")
+        logging.info("MovementSystem initialized.")
 
-    def rotate_robot(self, angle_degrees: float, step_size: float = 0.05, tolerance: float = 0.01):
+    def rotate_robot(self, angle_degrees: float, step_size: float = 0.1, tolerance: float = 0.01, max_steps: int = 100):
         """
         Rotate the robot's base by a specific angle.
 
         Args:
-            angle_degrees (float): The angle to rotate in degrees. Positive for clockwise, negative for counter-clockwise.
-            step_size (float): The angular velocity step size.
+            angle_degrees (float): The angle to rotate in degrees.
+            step_size (float): The angular velocity step size in radians per step.
             tolerance (float): The tolerance in radians to stop rotation.
+            max_steps (int): Maximum number of steps to prevent infinite loops.
         """
         angle_radians = math.radians(angle_degrees)
-        logging.info(f"Rotating robot by {angle_degrees} degrees ({angle_radians} radians).")
+        logging.info(f"Rotating robot by {angle_degrees} degrees ({angle_radians:.2f} radians).")
 
-        # Initialize cumulative rotation
-        cumulative_rotation = 0.0
+        initial_location = self.find_current_location()
+        if not initial_location:
+            logging.error("Initial location not found. Aborting rotation.")
+            return
 
-        # Determine rotation direction
+        _, _, initial_theta = initial_location
+        target_theta = self.normalize_angle(initial_theta + angle_radians)
         angular_velocity = step_size if angle_radians > 0 else -step_size
 
-        # Loop until the desired rotation is achieved within the tolerance
-        while abs(cumulative_rotation) < abs(angle_radians) - tolerance:
-            # Set velocity: linear=0, angular=angular_velocity
-            self.simulator.set_base_velocity(linear=0.0, angular=angular_velocity)
-            
-            # Optionally, add a small sleep to simulate time between actions
-            # import time
-            # time.sleep(0.1)
-
-            # Retrieve updated location to calculate rotation
+        for step in range(max_steps):
+            self.simulator.set_velocity(linear=0.0, angular=angular_velocity)
             current_location = self.find_current_location()
-            if current_location:
-                _, _, current_theta = current_location
-                cumulative_rotation += angular_velocity  # Simplistic accumulation
-                logging.debug(f"Cumulative rotation: {cumulative_rotation} radians.")
+            if not current_location:
+                logging.warning("Current location unavailable. Continuing rotation.")
+                continue
+
+            _, _, current_theta = current_location
+            angle_diff = self.normalize_angle(target_theta - current_theta)
+            logging.debug(f"Step {step+1}: Current theta={current_theta:.2f}, Angle diff={angle_diff:.2f}")
+
+            if abs(angle_diff) < tolerance:
+                logging.info("Desired rotation achieved.")
+                break
+        else:
+            logging.warning("Max rotation steps reached without achieving desired angle.")
 
         # Stop rotation
-        self.simulator.set_base_velocity(linear=0.0, angular=0.0)
+        self.simulator.set_velocity(linear=0.0, angular=0.0)
         logging.info("Rotation completed.")
 
     def go_to(self, target_coords: Tuple[float, float, float]):
@@ -69,161 +73,99 @@ class MovementSystem:
         Args:
             target_coords (Tuple[float, float, float]): Target (x, y, theta) in meters and radians.
         """
-        logging.info(f"Moving robot to coordinates: {target_coords}")
-        # Implement a simple proportional controller to reach the target coordinates
-
-        # Retrieve current location
+        logging.info(f"Moving to coordinates: {target_coords}")
         current_coords = self.find_current_location()
         if not current_coords:
-            logging.error("Unable to retrieve current location.")
+            logging.error("Current location not found. Cannot move to target.")
             return
 
-        current_x, current_y, current_theta = current_coords
-        target_x, target_y, target_theta = target_coords
-
-        # Calculate differences
-        delta_x = target_x - current_x
-        delta_y = target_y - current_y
-        delta_theta = target_theta - current_theta
-
-        # Calculate distance and angle to target
+        delta_x = target_coords[0] - current_coords[0]
+        delta_y = target_coords[1] - current_coords[1]
         distance = math.hypot(delta_x, delta_y)
         angle_to_target = math.atan2(delta_y, delta_x)
-        angle_diff = self.normalize_angle(angle_to_target - current_theta)
+        angle_diff = self.normalize_angle(angle_to_target - current_coords[2])
 
-        # Define proportional gains
+        # Proportional controller gains
         K_linear = 0.5
         K_angular = 1.0
 
         # Calculate velocities
-        linear_velocity = K_linear * distance
-        angular_velocity = K_angular * angle_diff
+        linear_velocity = np.clip(K_linear * distance, -1.0, 1.0)
+        angular_velocity = np.clip(K_angular * angle_diff, -2.0, 2.0)
 
-        # Limit velocities to prevent overshooting
-        max_linear = 1.0  # meters per second
-        max_angular = 2.0  # radians per second
-        linear_velocity = max(-max_linear, min(max_linear, linear_velocity))
-        angular_velocity = max(-max_angular, min(max_angular, angular_velocity))
+        logging.debug(f"Computed velocities - Linear: {linear_velocity:.2f}, Angular: {angular_velocity:.2f}")
 
-        logging.debug(f"Computed velocities - Linear: {linear_velocity}, Angular: {angular_velocity}")
+        self.simulator.set_velocity(linear=linear_velocity, angular=angular_velocity)
 
-        # Set velocities
-        self.simulator.set_base_velocity(linear=linear_velocity, angular=angular_velocity)
-
-        # Optionally, add logic to determine when to stop
-        # For simplicity, we'll assume this method is called iteratively until the robot reaches the target
-
-    def grasp_object(self, target_coords: Tuple[float, float, float], gripper_position: float = 1.0) -> bool:
+    def grasp_object(self, gripper_position: float = 1.0) -> bool:
         """
-        Move to the object's location and perform a grasp action.
+        Perform a grasp action by setting the gripper position.
 
         Args:
-            target_coords (Tuple[float, float, float]): Object's (x, y, theta) in meters and radians.
             gripper_position (float): Desired gripper position (0.0 for open, 1.0 for closed).
 
         Returns:
             bool: True if grasping was successful, False otherwise.
         """
-        logging.info(f"Attempting to grasp object at {target_coords} with gripper position {gripper_position}.")
-        # Move to the object's location
-        self.go_to(target_coords)
-
-        # Implement grasp logic by setting gripper position
-        # Assuming gripper control is part of the action vector, set the gripper to closed
-        # This requires knowing the index of the gripper in the action vector
-
-        action_vector = np.zeros(self.simulator.env.action_space.shape, dtype=np.float32)
-        
-        # Example:
-        # If the gripper position is controlled by the first element in the action vector
-        gripper_index = 0  # Replace with the actual index based on action space
-        action_vector[gripper_index] = gripper_position
-
-        # Execute the grasp action
-        self.simulator.move_to(action_vector)
-
-        # Optionally, verify if the object is grasped by checking the environment's state
-        # This part depends on the environment's API
-        # For simplicity, we'll assume the grasp is always successful
-        logging.info("Grasp action executed.")
-        return True  # Modify based on actual verification
+        logging.info(f"Grasping object with gripper position: {gripper_position}")
+        return self._set_gripper(gripper_position)
 
     def release_object(self, gripper_position: float = 0.0):
         """
-        Release the currently held object.
+        Perform a release action by setting the gripper position.
 
         Args:
             gripper_position (float): Desired gripper position (0.0 for open, 1.0 for closed).
         """
-        logging.info(f"Releasing object with gripper position {gripper_position}.")
+        logging.info(f"Releasing object with gripper position: {gripper_position}")
+        self._set_gripper(gripper_position)
 
-        # Set gripper to open
+    def _set_gripper(self, position: float) -> bool:
+        """
+        Helper method to set the gripper position.
+
+        Args:
+            position (float): Desired gripper position.
+
+        Returns:
+            bool: True if action executed, False otherwise.
+        """
         action_vector = np.zeros(self.simulator.env.action_space.shape, dtype=np.float32)
-        
-        # Example:
-        # If the gripper position is controlled by the first element in the action vector
-        gripper_index = 0  # Replace with the actual index based on action space
-        action_vector[gripper_index] = gripper_position
-
-        # Execute the release action
+        gripper_index = 0  # Update based on actual action space
+        action_vector[gripper_index] = position
         self.simulator.move_to(action_vector)
-        logging.info("Release action executed.")
+        logging.info("Gripper action executed.")
+        return True  # Placeholder for actual verification
 
     def find_current_location(self) -> Optional[Tuple[float, float, float]]:
         """
-        Use the simulator to find the current location of the robot.
+        Retrieve the robot's current location.
 
         Returns:
-            Optional[Tuple[float, float, float]]: Current (x, y, theta) in meters and radians, or None if unavailable.
+            Optional[Tuple[float, float, float]]: (x, y, theta) in meters and radians.
         """
-        logging.info("Retrieving current location from simulator.")
         obs = self.simulator.env.get_obs()
 
-        if 'agent' in obs and 'qpos' in obs['agent']:
-            qpos = obs['agent']['qpos']  # Tensor of shape [1, N]
-            if isinstance(qpos, torch.Tensor):
-                qpos = qpos.cpu().numpy()
-                logging.debug(f"qpos shape: {qpos.shape}")
-                if qpos.ndim == 2 and qpos.shape[0] == 1:
-                    qpos = qpos[0]  # Shape: [N]
-                else:
-                    logging.error(f"Unexpected qpos shape: {qpos.shape}")
-                    return None
-            elif isinstance(qpos, np.ndarray):
-                logging.debug(f"qpos shape: {qpos.shape}")
-                if qpos.ndim == 2 and qpos.shape[0] == 1:
-                    qpos = qpos[0]  # Shape: [N]
-                else:
-                    logging.error(f"Unexpected qpos shape: {qpos.shape}")
-                    return None
-            else:
-                logging.error(f"Unsupported qpos type: {type(qpos)}")
-                return None
-
-            # Extract base position (x, y, z)
-            base_x = qpos[0]
-            base_y = qpos[1]
-            base_z = qpos[2]
-
-            # Extract base orientation quaternion (x, y, z, w)
-            quat_x = qpos[3]
-            quat_y = qpos[4]
-            quat_z = qpos[5]
-            quat_w = qpos[6]
-
-            # Convert quaternion to Euler angles (roll, pitch, yaw)
-            rotation = R.from_quat([quat_x, quat_y, quat_z, quat_w])
-            euler = rotation.as_euler('xyz', degrees=False)
-            roll, pitch, yaw = euler  # radians
-
-            # Assuming theta is yaw
-            theta = yaw
-
-            logging.debug(f"Current location - x: {base_x}, y: {base_y}, theta: {theta}")
-            return (base_x, base_y, theta)
-        else:
+        if 'agent' not in obs or 'qpos' not in obs['agent']:
             logging.error("'agent' or 'qpos' not found in observations.")
             return None
+
+        qpos = obs['agent']['qpos']
+        if isinstance(qpos, torch.Tensor):
+            qpos = qpos.cpu().numpy().flatten()
+        elif isinstance(qpos, np.ndarray):
+            qpos = qpos.flatten()
+        else:
+            logging.error(f"Unsupported qpos type: {type(qpos)}")
+            return None
+
+        # Extract position and orientation
+        base_x, base_y, _ = qpos[:3]
+        quat_x, quat_y, quat_z, quat_w = qpos[3:7]
+        yaw = R.from_quat([quat_x, quat_y, quat_z, quat_w]).as_euler('xyz')[2]
+
+        logging.debug(f"Current location - x: {base_x:.2f}, y: {base_y:.2f}, theta: {yaw:.2f} radians")
+        return (base_x, base_y, yaw)
 
     @staticmethod
     def normalize_angle(angle: float) -> float:
@@ -236,8 +178,4 @@ class MovementSystem:
         Returns:
             float: The normalized angle in radians.
         """
-        while angle > math.pi:
-            angle -= 2 * math.pi
-        while angle < -math.pi:
-            angle += 2 * math.pi
-        return angle
+        return (angle + math.pi) % (2 * math.pi) - math.pi

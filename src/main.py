@@ -20,7 +20,6 @@ def main():
     # Initialize the simulator
     simulator = ManiSkillSimulator()
     simulator.start()
-    # simulator.home() TODO Fix home()
 
     # Initialize robot components
     memory = Memory()
@@ -56,7 +55,7 @@ def main():
     except KeyboardInterrupt:
         print("\nShutting down simulation.")
         robot.shutdown()
-        simulator.stop()
+        simulator.close()
 
 if __name__ == "__main__":
     main()
