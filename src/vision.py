@@ -5,6 +5,8 @@ from ultralytics import YOLO
 from typing import List
 from object import Object  # Ensure object.py contains the Object class
 from maniskill_simulator import ManiSkillSimulator
+import numpy as np
+import torch
 
 class VisionSystem:
     def __init__(self, simulator: ManiSkillSimulator, model_path: str = "models/yolov8n.pt"):
@@ -18,14 +20,34 @@ class VisionSystem:
         self.simulator = simulator
         self.model = YOLO(model_path)  # Load the YOLOv8 model
 
-    def get_robot_view_image(self) -> any:
+    def get_robot_view_image(self) -> np.ndarray:
         """
         Capture the current image from the robot's camera feed.
 
         Returns:
-            Any: The captured image in a format compatible with YOLOv8 (e.g., numpy array).
+            np.ndarray: The captured image in HWC format (Height, Width, Channels).
         """
         image = self.simulator.get_camera_image()
+        return image
+
+    def preprocess_image(self, image: np.ndarray) -> np.ndarray:
+        """
+        Preprocess the image to ensure it's in the correct format for YOLOv8.
+
+        Args:
+            image (np.ndarray): The original image.
+
+        Returns:
+            np.ndarray: The preprocessed image.
+        """
+        # If the image has a batch dimension, remove it
+        if image.ndim == 4 and image.shape[0] == 1:
+            image = image[0]
+        
+        # Convert image from BGR to RGB if necessary
+        if image.shape[2] == 3:
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        
         return image
 
     def identify_objects_in_robot_view(self, confidence_threshold: float = 0.5) -> List[Object]:
@@ -43,6 +65,9 @@ class VisionSystem:
             print("No image captured from the camera.")
             return []
 
+        # Preprocess the image
+        image = self.preprocess_image(image)
+
         # Perform object detection
         results = self.model(image)
 
@@ -50,7 +75,7 @@ class VisionSystem:
 
         for result in results:
             for box in result.boxes:
-                confidence = box.confidence
+                confidence = box.conf
                 if confidence < confidence_threshold:
                     continue
 
