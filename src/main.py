@@ -14,7 +14,7 @@ def get_robot_request() -> str:
     Placeholder for getting user input.
     Replace with actual input method as needed (e.g., voice command).
     """
-    return input("Enter command (e.g., 'Remember red cup location'): ")
+    return input("Enter command (e.g., 'Remember dark grey trash can location'): ")
 
 def main():
     # Initialize the simulator

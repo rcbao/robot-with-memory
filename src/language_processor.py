@@ -65,7 +65,7 @@ class LanguageProcessor:
             )
 
             response_content = response.choices[0].message.content.strip()
-            print(response_content)
+            print(f"LLM Response:\n----------\n{response_content}\n----------\n")
             response_content = clean_code_block(response_content)
             parsed = json.loads(response_content)
 
@@ -112,7 +112,7 @@ class LanguageProcessor:
             
 
             response_content = response.choices[0].message.content.strip()
-            print(response_content)
+            print(f"LLM Response:\n----------\n{response_content}\n----------\n")
             return response_content
 
         except Exception as e:

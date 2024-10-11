@@ -84,16 +84,19 @@ class CommandHandler:
             Optional[Object]: Located object or None.
         """
         # Search memory
+        print("CommandHandler.find_object() -- Searching memory")
         obj = self.memory.find_object_from_past_memory(object_name, detail)
         if obj:
             return obj
 
         # Search current view
+        print("CommandHandler.find_object() -- Searching current view")
         obj = self.find_object_from_current_view(object_name, detail)
         if obj:
             return obj
 
         # Scan environment
+        print("CommandHandler.find_object() -- Scanning environment")
         obj = self.find_object_by_scanning_env(object_name, detail)
         return obj
 
@@ -185,4 +188,4 @@ class CommandHandler:
         Args:
             response (str): Response message.
         """
-        print(response)
+        print(f"[Robot Response] {response}")

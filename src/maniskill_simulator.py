@@ -66,12 +66,10 @@ class ManiSkillSimulator:
         obs = self.env.get_obs()
         if 'sensor_data' in obs:
             sensor_data = obs['sensor_data']
-            print("sensor_data types::")
-            print(sensor_data.keys())
             camera_image = sensor_data["fetch_head"]['rgb']  
             
             self.save_camera_image_by_type("fetch_head")
-            self.save_camera_image_by_type("fetch_hand")
+            # self.save_camera_image_by_type("fetch_hand")
         else:
             raise KeyError("Camera observation not found in the environment observations.")
         
