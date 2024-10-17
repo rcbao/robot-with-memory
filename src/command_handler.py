@@ -65,11 +65,13 @@ class CommandHandler:
         Returns:
             Optional[Object]: Detected object or None.
         """
-        for angle in range(0, 360, 60):  # Rotate in 60-degree increments
-            self.movement.rotate_robot(angle)
+        # No need to track total_rotation, we are only rotating 360 degrees
+        for _ in range(4):  # Rotate in 60-degree increments (6 steps of 60 degrees)
+            self.movement.rotate_robot(60)  # Rotate incrementally by 60 degrees
             obj = self.find_object_from_current_view(object_name, detail)
             if obj:
                 return obj
+
         return None
 
     def find_object(self, object_name: str, detail: str) -> Optional[Object]:
