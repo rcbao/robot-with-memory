@@ -43,10 +43,8 @@ class MovementSystem:
 
         _, _, initial_theta = initial_location
         target_theta = self.normalize_angle(initial_theta + angle_radians)
-        angular_velocity = step_size if angle_radians > 0 else -step_size
 
         for step in range(max_steps):
-            self.simulator.set_velocity(linear=0.0, angular=angular_velocity)
             current_location = self.find_current_location()
             if not current_location:
                 logging.warning("Current location unavailable. Continuing rotation.")
@@ -54,17 +52,33 @@ class MovementSystem:
 
             _, _, current_theta = current_location
             angle_diff = self.normalize_angle(target_theta - current_theta)
-            logging.debug(f"Step {step+1}: Current theta={current_theta:.2f}, Angle diff={angle_diff:.2f}")
 
             if abs(angle_diff) < tolerance:
                 logging.info("Desired rotation achieved.")
                 break
+
+            # Calculate angular velocity towards the target angle
+            angular_velocity = np.clip(angle_diff, -step_size, step_size)
+
+            # Create the action vector for rotation
+            action_vector = np.zeros(self.simulator.env.action_space.shape, dtype=np.float32)
+            base_rotation_index = 2  # Update based on your action space; assuming index 2 controls the base rotation
+            action_vector[base_rotation_index] = angular_velocity
+
+            # Execute the rotation action
+            self.simulator.env.step(action_vector)
+
+            # Log the progress
+            logging.debug(f"Step {step + 1}: Current theta={current_theta:.2f}, Angle diff={angle_diff:.2f}")
+
         else:
             logging.warning("Max rotation steps reached without achieving desired angle.")
 
-        # Stop rotation
-        self.simulator.set_velocity(linear=0.0, angular=0.0)
+        # Stop rotation by applying zero velocity
+        action_vector = np.zeros(self.simulator.env.action_space.shape, dtype=np.float32)
+        self.simulator.env.step(action_vector)
         logging.info("Rotation completed.")
+
 
     def go_to(self, target_coords: Tuple[float, float, float]):
         """

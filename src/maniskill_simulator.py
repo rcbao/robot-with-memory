@@ -1,4 +1,5 @@
 # /simulator/maniskill_simulator.py
+
 import datetime
 import gymnasium as gym
 from typing import Optional, Tuple
@@ -20,9 +21,12 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 
 class ManiSkillSimulator:
-    def __init__(self):
+    def __init__(self, record_video: bool = True):
         """
         Initialize the ManiSkill simulator with a specific environment configuration.
+
+        Args:
+            record_video (bool): If True, records the entire episode as a video.
         """
         logging.info("Initializing ManiSkill Simulator.")
         # Initialize the ManiSkill environment
@@ -32,6 +36,19 @@ class ManiSkillSimulator:
             obs_mode="rgbd",
             sensor_configs=dict(width=1920, height=1440)
         )
+
+        if record_video:
+            # self.env = RecordEpisode(self.env, output_dir="./videos", save_video=True, video_fps=30)
+            self.env = RecordEpisode(
+                env,
+                output_dir="./videos",
+                save_trajectory=False,
+                save_video=True,
+                video_fps=30,
+                max_steps_per_video=MAX_STEPS_PER_VIDEO
+            )
+            logging.info(f"Recording enabled.")
+
         self.env.reset()
         logging.info("ManiSkill Simulator initialized and environment reset.")
         
@@ -72,7 +89,7 @@ class ManiSkillSimulator:
             camera_image = sensor_data["fetch_head"]['rgb']  
             
             self.save_camera_image_by_type("fetch_head")
-            # self.save_camera_image_by_type("fetch_hand")
+            self.save_camera_image_by_type("fetch_hand")
         else:
             raise KeyError("Camera observation not found in the environment observations.")
         
