@@ -40,12 +40,11 @@ class ManiSkillSimulator:
         if record_video:
             # self.env = RecordEpisode(self.env, output_dir="./videos", save_video=True, video_fps=30)
             self.env = RecordEpisode(
-                env,
+                self.env,
                 output_dir="./videos",
                 save_trajectory=False,
                 save_video=True,
-                video_fps=30,
-                max_steps_per_video=MAX_STEPS_PER_VIDEO
+                video_fps=30
             )
             logging.info(f"Recording enabled.")
 
@@ -89,7 +88,7 @@ class ManiSkillSimulator:
             camera_image = sensor_data["fetch_head"]['rgb']  
             
             self.save_camera_image_by_type("fetch_head")
-            self.save_camera_image_by_type("fetch_hand")
+            # self.save_camera_image_by_type("fetch_hand")
         else:
             raise KeyError("Camera observation not found in the environment observations.")
         

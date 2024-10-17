@@ -62,7 +62,7 @@ class MovementSystem:
 
             # Create the action vector for rotation
             action_vector = np.zeros(self.simulator.env.action_space.shape, dtype=np.float32)
-            base_rotation_index = 2  # Update based on your action space; assuming index 2 controls the base rotation
+            base_rotation_index = 12  # 'root_z_rotation_joint' controls base rotation at index 14
             action_vector[base_rotation_index] = angular_velocity
 
             # Execute the rotation action
