@@ -45,10 +45,12 @@ class CommandHandler:
         """
         detected_objects = self.vision.identify_objects_in_robot_view()
         for obj in detected_objects:
-            if (
-                obj.name.lower() == object_name.lower()
-                and detail.lower() in obj.detail.lower()
-            ):
+            print(obj)
+            name_match = obj.name.lower() == object_name.lower()
+            detail_match = detail and obj.detail and (detail.lower() in obj.detail.lower())
+            # TODO: incorporate detail somehow
+            if name_match:
+                print(f"found object:: {object_name.lower()}")
                 return obj
         return None
 
@@ -66,8 +68,10 @@ class CommandHandler:
             Optional[Object]: Detected object or None.
         """
         # No need to track total_rotation, we are only rotating 360 degrees
+        self.movement.move_arm_down_to_clear_view()
         for _ in range(4):  # Rotate in 60-degree increments (6 steps of 60 degrees)
             self.movement.rotate_robot(60)  # Rotate incrementally by 60 degrees
+            print("...Trying to find object from current view")
             obj = self.find_object_from_current_view(object_name, detail)
             if obj:
                 return obj

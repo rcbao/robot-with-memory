@@ -193,3 +193,22 @@ class MovementSystem:
             float: The normalized angle in radians.
         """
         return (angle + math.pi) % (2 * math.pi) - math.pi
+        
+    def move_arm_down_to_clear_view(self):
+        """
+        Moves the robot's arm down to ensure it does not block the head camera's view.
+        This is done by adjusting relevant joints in the arm.
+
+        Returns:
+            None
+        """
+        # Create the action vector with all zeros (no movement for other joints)
+        for _ in range(100):
+            action_vector = action = np.array([100.0, 100.0, 100.0, 100.0, 0.0, 0.0, 0.0, 0.0,0.0, 0.0, 0.0, 0.0, 0.0]).reshape(1, 13)
+            obs, _, done, _, _ = self.simulator.env.step(action_vector)
+            if done:
+                break
+
+        logging.info("Moved the arm down to clear the head camera's view.")
+
+        return obs

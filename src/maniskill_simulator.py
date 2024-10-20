@@ -20,6 +20,22 @@ from scipy.spatial.transform import Rotation as R
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
+CAMERA_CONFIGS_HIGH_QUALITY = {
+    "sensor_configs": dict(width=1920, height=1080, shader_pack="rt-fast"),
+    "human_render_camera_configs":dict(width=1080, height=1080, shader_pack="rt-fast"),
+    "viewer_camera_configs": dict(fov=1),
+    "enable_shadow": True
+}
+
+CAMERA_CONFIG_DEFAULT = {
+    "sensor_configs": dict(width=640, height=480, shader_pack="default"),
+    "human_render_camera_configs":dict(width=640, height=480, shader_pack="default"),
+    "viewer_camera_configs": dict(fov=1),
+    "enable_shadow": True
+}
+
+USING_HQ_CAMERA = False
+
 class ManiSkillSimulator:
     def __init__(self, record_video: bool = True):
         """
@@ -29,12 +45,17 @@ class ManiSkillSimulator:
             record_video (bool): If True, records the entire episode as a video.
         """
         logging.info("Initializing ManiSkill Simulator.")
-        # Initialize the ManiSkill environment
+        
+        config = CAMERA_CONFIGS_HIGH_QUALITY if USING_HQ_CAMERA else CAMERA_CONFIG_DEFAULT
+
         self.env = gym.make(
             'ReplicaCAD_SceneManipulation-v1', 
             render_mode="rgb_array",
             obs_mode="rgbd",
-            sensor_configs=dict(width=1920, height=1440)
+            sensor_configs=config["sensor_configs"],
+            human_render_camera_configs=config["human_render_camera_configs"],
+            viewer_camera_configs=config["viewer_camera_configs"],
+            enable_shadow=config["enable_shadow"]
         )
 
         if record_video:
