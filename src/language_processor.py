@@ -118,3 +118,46 @@ class LanguageProcessor:
         except Exception as e:
             print(f"Error generating response: {e}")
             return "I'm sorry, I couldn't process that request."
+
+    def are_the_same_object(self, object_name: str, object_detail: str, other_object_name: str, other_object_detail: str) -> bool:
+        """
+        Decide whether the two descriptions of an object are for the same item.
+
+        Arguments:
+            object_name (str): object name.
+            object_detail (str): object descriptors. 
+            other_object_name (str): the name of the object you want to compare to.
+            other_object_name (str): the description of the object you want to compare to.
+
+        Returns:
+            bool: whether the objects are the same (true) or not (false).
+        """
+        prompt = (
+            f"Determine if the two objects are the same object or not, based off of the object name and details:\n\n"
+            f'Object 1 name: {object_name}'
+            f'Object 1 details: {object_detail}'
+            f'Object 2 name: {other_object_name}'
+            f'Object 2 details: {other_object_detail}'
+        )
+
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "Reply strictly with a boolean value (either 'True' or 'False'). Use common sense.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                max_tokens=100,
+                temperature=0.7,
+            )
+
+            response_content = response.choices[0].message.content.strip()
+            bool_value = eval(response_content)
+            return bool_value
+
+        except Exception as e:
+            print(f"Error generating response: {e}")
+            return "I'm sorry, I couldn't process that request."
