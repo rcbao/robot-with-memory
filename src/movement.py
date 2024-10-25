@@ -40,8 +40,10 @@ class MovementSystem:
         if not initial_location:
             logging.error("Initial location not found. Aborting rotation.")
             return
+        print("initial_location::")
+        print(initial_location)
 
-        _, _, initial_theta = initial_location
+        _, _, _, initial_theta = initial_location
         target_theta = self.normalize_angle(initial_theta + angle_radians)
 
         for step in range(max_steps):
@@ -50,7 +52,7 @@ class MovementSystem:
                 logging.warning("Current location unavailable. Continuing rotation.")
                 continue
 
-            _, _, current_theta = current_location
+            _, _, _, current_theta = current_location
             angle_diff = self.normalize_angle(target_theta - current_theta)
 
             if abs(angle_diff) < tolerance:
@@ -97,7 +99,7 @@ class MovementSystem:
         delta_y = target_coords[1] - current_coords[1]
         distance = math.hypot(delta_x, delta_y)
         angle_to_target = math.atan2(delta_y, delta_x)
-        angle_diff = self.normalize_angle(angle_to_target - current_coords[2])
+        angle_diff = self.normalize_angle(angle_to_target - current_coords[3])
 
         # Proportional controller gains
         K_linear = 0.5
@@ -151,12 +153,12 @@ class MovementSystem:
         logging.info("Gripper action executed.")
         return True  # Placeholder for actual verification
 
-    def find_current_location(self) -> Optional[Tuple[float, float, float]]:
+    def find_current_location(self) -> Optional[Tuple[float, float, float, float]]:
         """
-        Retrieve the robot's current location.
+        Retrieve the robot's current location in 3D coordinates with orientation.
 
         Returns:
-            Optional[Tuple[float, float, float]]: (x, y, theta) in meters and radians.
+            Optional[Tuple[float, float, float, float]]: (x, y, z, yaw) in meters and radians.
         """
         obs = self.simulator.env.get_obs()
 
@@ -173,13 +175,25 @@ class MovementSystem:
             logging.error(f"Unsupported qpos type: {type(qpos)}")
             return None
 
-        # Extract position and orientation
-        base_x, base_y, _ = qpos[:3]
-        quat_x, quat_y, quat_z, quat_w = qpos[3:7]
-        yaw = R.from_quat([quat_x, quat_y, quat_z, quat_w]).as_euler('xyz')[2]
+        if len(qpos) < 7:
+            logging.error("qpos does not contain enough elements for position and orientation.")
+            return None
 
-        logging.debug(f"Current location - x: {base_x:.2f}, y: {base_y:.2f}, theta: {yaw:.2f} radians")
-        return (base_x, base_y, yaw)
+        # Extract 3D position and orientation
+        base_x, base_y, base_z = qpos[:3]
+        quat_x, quat_y, quat_z, quat_w = qpos[3:7]
+
+        try:
+            # Adjust the Euler sequence based on simulator's convention
+            euler_angles = R.from_quat([quat_x, quat_y, quat_z, quat_w]).as_euler('xyz')
+            yaw = euler_angles[2]
+        except ValueError as e:
+            logging.error(f"Error converting quaternion to euler angles: {e}")
+            return None
+
+        logging.debug(f"Current location - x: {base_x:.2f}, y: {base_y:.2f}, z: {base_z:.2f}, yaw: {yaw:.2f} radians")
+        return (base_x, base_y, base_z, yaw)
+
 
     @staticmethod
     def normalize_angle(angle: float) -> float:
