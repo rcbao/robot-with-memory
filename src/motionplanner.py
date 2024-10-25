@@ -1,3 +1,5 @@
+# /mani_skill/examples/motionplanning/fetch/motionplanner.py
+
 import mplib
 import numpy as np
 import sapien
@@ -8,6 +10,9 @@ from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.envs.scene import ManiSkillScene
 from mani_skill.utils.structs.pose import to_sapien_pose
 import sapien.physx as physx
+from transforms3d import quaternions
+
+# Constants for gripper states
 OPEN = 1
 CLOSED = -1
 
@@ -23,7 +28,22 @@ class FetchArmMotionPlanningSolver:
         print_env_info: bool = True,
         joint_vel_limits=0.9,
         joint_acc_limits=0.9,
+        move_group: str = "arm_with_torso",  # Fetch's end-effector group name
     ):
+        """
+        Initialize the FetchArmMotionPlanningSolver with the simulation environment and parameters.
+
+        Args:
+            env (BaseEnv): The simulation environment instance.
+            debug (bool): Enables debug mode if True.
+            vis (bool): Enables visualization if True.
+            base_pose (sapien.Pose, optional): The initial pose of the robot's base.
+            visualize_target_grasp_pose (bool): Visualizes the target grasp pose.
+            print_env_info (bool): Prints environment information during execution.
+            joint_vel_limits (float): Joint velocity limits.
+            joint_acc_limits (float): Joint acceleration limits.
+            move_group (str): The move group name for the Fetch robot's end-effector.
+        """
         self.env = env
         self.base_env: BaseEnv = env.unwrapped
         self.env_agent: BaseAgent = self.base_env.agent
@@ -31,7 +51,9 @@ class FetchArmMotionPlanningSolver:
         self.joint_vel_limits = joint_vel_limits
         self.joint_acc_limits = joint_acc_limits
 
-        self.base_pose = to_sapien_pose(base_pose)
+        self.base_pose = to_sapien_pose(base_pose) if base_pose else sapien.Pose()
+
+        self.move_group = move_group  # Updated for Fetch robot
 
         self.planner = self.setup_planner()
         self.control_mode = self.base_env.control_mode
@@ -67,21 +89,41 @@ class FetchArmMotionPlanningSolver:
             self.base_env.render_human()
 
     def setup_planner(self):
-        link_names = [link.get_name() for link in self.robot.get_links()]
-        joint_names = [joint.get_name() for joint in self.robot.get_active_joints()]
-        planner = mplib.Planner(
-            urdf=self.env_agent.urdf_path,
-            srdf=self.env_agent.urdf_path.replace(".urdf", ".srdf"),
-            user_link_names=link_names,
-            user_joint_names=joint_names,
-            move_group="arm_with_torso",
-            joint_vel_limits=np.ones(7) * self.joint_vel_limits,
-            joint_acc_limits=np.ones(7) * self.joint_acc_limits,
-        )
-        planner.set_base_pose(np.hstack([self.base_pose.p, self.base_pose.q]))
-        return planner
+        """
+        Sets up the motion planner using mplib for the Fetch robot.
+
+        Returns:
+            mplib.Planner: The initialized motion planner.
+        """
+        try:
+            link_names = [link.get_name() for link in self.robot.get_links()]
+            joint_names = [joint.get_name() for joint in self.robot.get_active_joints()]
+            planner = mplib.Planner(
+                urdf=self.env_agent.urdf_path,
+                srdf=self.env_agent.urdf_path.replace(".urdf", ".srdf"),
+                user_link_names=link_names,
+                user_joint_names=joint_names,
+                move_group=self.move_group,  # Updated for Fetch
+                joint_vel_limits=np.ones(len(joint_names)) * self.joint_vel_limits,
+                joint_acc_limits=np.ones(len(joint_names)) * self.joint_acc_limits,
+            )
+            planner.set_base_pose(np.hstack([self.base_pose.p, self.base_pose.q]))
+            return planner
+        except Exception as e:
+            print(f"Failed to set up planner: {e}")
+            raise
 
     def follow_path(self, result, refine_steps: int = 0):
+        """
+        Executes the planned path by sending actions to the environment.
+
+        Args:
+            result (dict): The result dictionary from the planner containing positions and velocities.
+            refine_steps (int): Additional steps to refine the path.
+
+        Returns:
+            tuple: The last observation, reward, termination flags, and info from the environment.
+        """
         n_step = result["position"].shape[0]
         for i in range(n_step + refine_steps):
             qpos = result["position"][min(i, n_step - 1)]
@@ -103,6 +145,18 @@ class FetchArmMotionPlanningSolver:
     def move_to_pose_with_RRTConnect(
         self, pose: sapien.Pose, dry_run: bool = False, refine_steps: int = 0
     ):
+        """
+        Plans and optionally executes a motion path to the specified pose using the RRT-Connect algorithm.
+
+        Args:
+            pose (sapien.Pose): The target pose to move the robot's end-effector to.
+            dry_run (bool): If True, only plan the path without executing it.
+            refine_steps (int): Number of additional steps to refine the path.
+
+        Returns:
+            dict or int: The result of the environment step if executed, or the planning result if dry_run is True.
+                         Returns -1 if planning fails.
+        """
         if self.grasp_pose_visual is not None:
             self.grasp_pose_visual.set_pose(pose)
         pose = sapien.Pose(p=pose.p, q=pose.q)
@@ -125,41 +179,60 @@ class FetchArmMotionPlanningSolver:
     def move_to_pose_with_screw(
         self, pose: sapien.Pose, dry_run: bool = False, refine_steps: int = 0
     ):
+        """
+        Plans and optionally executes a motion path to the specified pose using a screw-based planning approach.
+
+        Args:
+            pose (sapien.Pose): The target pose to move the robot's end-effector to.
+            dry_run (bool): If True, only plan the path without executing it.
+            refine_steps (int): Number of additional steps to refine the path.
+
+        Returns:
+            dict or int: The result of the environment step if executed, or the planning result if dry_run is True.
+                         Returns -1 if planning fails.
+        """
         pose = to_sapien_pose(pose)
-        # try screw two times before giving up
-        if self.grasp_pose_visual is not None:
-            self.grasp_pose_visual.set_pose(pose)
-        pose = sapien.Pose(p=pose.p , q=pose.q)
-        result = self.planner.plan_screw(
-            np.concatenate([pose.p, pose.q]),
-            self.robot.get_qpos().cpu().numpy()[0],
-            time_step=self.base_env.control_timestep,
-            use_point_cloud=self.use_point_cloud,
-        )
-        if result["status"] != "Success":
+        # Attempt screw planning twice before giving up
+        for attempt in range(2):
+            if self.grasp_pose_visual is not None:
+                self.grasp_pose_visual.set_pose(pose)
+            pose = sapien.Pose(p=pose.p, q=pose.q)
             result = self.planner.plan_screw(
                 np.concatenate([pose.p, pose.q]),
                 self.robot.get_qpos().cpu().numpy()[0],
                 time_step=self.base_env.control_timestep,
                 use_point_cloud=self.use_point_cloud,
             )
-            if result["status"] != "Success":
-                print(result["status"])
-                self.render_wait()
-                return -1
+            if result["status"] == "Success":
+                break
+            print(f"Screw planning attempt {attempt + 1} failed with status: {result['status']}")
+        else:
+            print(result["status"])
+            self.render_wait()
+            return -1
         self.render_wait()
         if dry_run:
             return result
         return self.follow_path(result, refine_steps=refine_steps)
 
-    def open_gripper(self):
+    def open_gripper(self, steps: int = 6):
+        """
+        Opens the Fetch robot's gripper.
+
+        Args:
+            steps (int): Number of action steps to execute the gripper opening.
+
+        Returns:
+            tuple: The last observation, reward, termination flags, and info from the environment.
+        """
         self.gripper_state = OPEN
         qpos = self.robot.get_qpos()[0, :-2].cpu().numpy()
-        for i in range(6):
+        for i in range(steps):
             if self.control_mode == "pd_joint_pos":
                 action = np.hstack([qpos, self.gripper_state])
             else:
-                action = np.hstack([qpos, qpos * 0, self.gripper_state])
+                # Assuming Fetch gripper has a single control parameter
+                action = np.hstack([qpos, self.gripper_state])
             obs, reward, terminated, truncated, info = self.env.step(action)
             self.elapsed_steps += 1
             if self.print_env_info:
@@ -170,14 +243,24 @@ class FetchArmMotionPlanningSolver:
                 self.base_env.render_human()
         return obs, reward, terminated, truncated, info
 
-    def close_gripper(self, t=6):
+    def close_gripper(self, steps: int = 6):
+        """
+        Closes the Fetch robot's gripper.
+
+        Args:
+            steps (int): Number of action steps to execute the gripper closing.
+
+        Returns:
+            tuple: The last observation, reward, termination flags, and info from the environment.
+        """
         self.gripper_state = CLOSED
         qpos = self.robot.get_qpos()[0, :-2].cpu().numpy()
-        for i in range(t):
+        for i in range(steps):
             if self.control_mode == "pd_joint_pos":
                 action = np.hstack([qpos, self.gripper_state])
             else:
-                action = np.hstack([qpos, qpos * 0, self.gripper_state])
+                # Assuming Fetch gripper has a single control parameter
+                action = np.hstack([qpos, self.gripper_state])
             obs, reward, terminated, truncated, info = self.env.step(action)
             self.elapsed_steps += 1
             if self.print_env_info:
@@ -189,6 +272,13 @@ class FetchArmMotionPlanningSolver:
         return obs, reward, terminated, truncated, info
 
     def add_box_collision(self, extents: np.ndarray, pose: sapien.Pose):
+        """
+        Adds collision points from a box to the planner's point cloud.
+
+        Args:
+            extents (np.ndarray): The dimensions of the box.
+            pose (sapien.Pose): The pose of the box in the environment.
+        """
         self.use_point_cloud = True
         box = trimesh.creation.box(extents, transform=pose.to_transformation_matrix())
         pts, _ = trimesh.sample.sample_surface(box, 256)
@@ -199,6 +289,12 @@ class FetchArmMotionPlanningSolver:
         self.planner.update_point_cloud(self.all_collision_pts)
 
     def add_collision_pts(self, pts: np.ndarray):
+        """
+        Adds arbitrary collision points to the planner's point cloud.
+
+        Args:
+            pts (np.ndarray): Array of collision points.
+        """
         if self.all_collision_pts is None:
             self.all_collision_pts = pts
         else:
@@ -206,20 +302,34 @@ class FetchArmMotionPlanningSolver:
         self.planner.update_point_cloud(self.all_collision_pts)
 
     def clear_collisions(self):
+        """
+        Clears all collision points from the planner's point cloud.
+        """
         self.all_collision_pts = None
         self.use_point_cloud = False
 
     def close(self):
+        """
+        Placeholder for cleanup operations. Implement resource release if necessary.
+        """
         pass
-
-from transforms3d import quaternions
 
 
 def build_fetch_gripper_grasp_pose_visual(scene: ManiSkillScene):
+    """
+    Builds visual aids for the Fetch robot's grasp pose in the simulation.
+
+    Args:
+        scene (ManiSkillScene): The simulation scene.
+
+    Returns:
+        sapien.Actor: The visual representation actor for the grasp pose.
+    """
     builder = scene.create_actor_builder()
     grasp_pose_visual_width = 0.01
     grasp_width = 0.05
 
+    # Sphere to indicate the grasp point
     builder.add_sphere_visual(
         pose=sapien.Pose(p=[0, 0, 0.0]),
         radius=grasp_pose_visual_width,
