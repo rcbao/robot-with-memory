@@ -1,16 +1,18 @@
-# /mani_skill/examples/motionplanning/fetch/motionplanner.py
-
+import os
 import mplib
 import numpy as np
 import sapien
 import trimesh
+import logging
 
 from mani_skill.agents.base_agent import BaseAgent
 from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.envs.scene import ManiSkillScene
 from mani_skill.utils.structs.pose import to_sapien_pose
-import sapien.physx as physx
 from transforms3d import quaternions
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Constants for gripper states
 OPEN = 1
@@ -23,12 +25,12 @@ class FetchArmMotionPlanningSolver:
         env: BaseEnv,
         debug: bool = False,
         vis: bool = True,
-        base_pose: sapien.Pose = None,  # TODO mplib doesn't support robot base being anywhere but 0
+        base_pose: sapien.Pose = None,  # TODO mplib might have constraints on robot base
         visualize_target_grasp_pose: bool = True,
         print_env_info: bool = True,
         joint_vel_limits=0.9,
         joint_acc_limits=0.9,
-        move_group: str = "arm_with_torso",  # Fetch's end-effector group name
+        move_group: str = "fetch_gripper",  # Fetch's end-effector group name
     ):
         """
         Initialize the FetchArmMotionPlanningSolver with the simulation environment and parameters.
@@ -98,19 +100,38 @@ class FetchArmMotionPlanningSolver:
         try:
             link_names = [link.get_name() for link in self.robot.get_links()]
             joint_names = [joint.get_name() for joint in self.robot.get_active_joints()]
+            
+            # Path to the meshes directory
+            mesh_dir = os.path.dirname(self.env_agent.urdf_path) + "/meshes/"
+            
+            # Filter links to include only those with convex collision meshes
+            valid_link_names = []
+            for link in link_names:
+                collision_mesh = f"{link}_collision.STL.convex.stl"
+                collision_mesh_path = os.path.join(mesh_dir, collision_mesh)
+                if os.path.exists(collision_mesh_path):
+                    valid_link_names.append(link)
+                    logging.info(f"Including link '{link}' with convex collision mesh.")
+                else:
+                    logging.warning(f"Skipping link '{link}': Convex collision mesh '{collision_mesh}' not found.")
+            
+            if not valid_link_names:
+                raise ValueError("No valid links with convex collision meshes found. Planner cannot be initialized.")
+            
             planner = mplib.Planner(
                 urdf=self.env_agent.urdf_path,
                 srdf=self.env_agent.urdf_path.replace(".urdf", ".srdf"),
-                user_link_names=link_names,
+                user_link_names=valid_link_names,
                 user_joint_names=joint_names,
                 move_group=self.move_group,  # Updated for Fetch
                 joint_vel_limits=np.ones(len(joint_names)) * self.joint_vel_limits,
                 joint_acc_limits=np.ones(len(joint_names)) * self.joint_acc_limits,
             )
             planner.set_base_pose(np.hstack([self.base_pose.p, self.base_pose.q]))
+            logging.info("Motion planner successfully initialized.")
             return planner
         except Exception as e:
-            print(f"Failed to set up planner: {e}")
+            logging.error(f"Failed to set up planner: {e}")
             raise
 
     def follow_path(self, result, refine_steps: int = 0):
@@ -135,9 +156,7 @@ class FetchArmMotionPlanningSolver:
             obs, reward, terminated, truncated, info = self.env.step(action)
             self.elapsed_steps += 1
             if self.print_env_info:
-                print(
-                    f"[{self.elapsed_steps:3}] Env Output: reward={reward} info={info}"
-                )
+                logging.info(f"[{self.elapsed_steps:3}] Env Output: reward={reward} info={info}")
             if self.vis:
                 self.base_env.render_human()
         return obs, reward, terminated, truncated, info
@@ -168,7 +187,7 @@ class FetchArmMotionPlanningSolver:
             wrt_world=True,
         )
         if result["status"] != "Success":
-            print(result["status"])
+            logging.error(f"Motion planning failed with status: {result['status']}")
             self.render_wait()
             return -1
         self.render_wait()
@@ -204,10 +223,11 @@ class FetchArmMotionPlanningSolver:
                 use_point_cloud=self.use_point_cloud,
             )
             if result["status"] == "Success":
+                logging.info(f"Screw planning succeeded on attempt {attempt + 1}.")
                 break
-            print(f"Screw planning attempt {attempt + 1} failed with status: {result['status']}")
+            logging.warning(f"Screw planning attempt {attempt + 1} failed with status: {result['status']}")
         else:
-            print(result["status"])
+            logging.error("Screw planning failed after multiple attempts.")
             self.render_wait()
             return -1
         self.render_wait()
@@ -236,9 +256,7 @@ class FetchArmMotionPlanningSolver:
             obs, reward, terminated, truncated, info = self.env.step(action)
             self.elapsed_steps += 1
             if self.print_env_info:
-                print(
-                    f"[{self.elapsed_steps:3}] Env Output: reward={reward} info={info}"
-                )
+                logging.info(f"[{self.elapsed_steps:3}] Env Output: reward={reward} info={info}")
             if self.vis:
                 self.base_env.render_human()
         return obs, reward, terminated, truncated, info
@@ -264,9 +282,7 @@ class FetchArmMotionPlanningSolver:
             obs, reward, terminated, truncated, info = self.env.step(action)
             self.elapsed_steps += 1
             if self.print_env_info:
-                print(
-                    f"[{self.elapsed_steps:3}] Env Output: reward={reward} info={info}"
-                )
+                logging.info(f"[{self.elapsed_steps:3}] Env Output: reward={reward} info={info}")
             if self.vis:
                 self.base_env.render_human()
         return obs, reward, terminated, truncated, info
@@ -336,38 +352,36 @@ def build_fetch_gripper_grasp_pose_visual(scene: ManiSkillScene):
         material=sapien.render.RenderMaterial(base_color=[0.3, 0.4, 0.8, 0.7])
     )
 
-    builder.add_box_visual(
-        pose=sapien.Pose(p=[0, 0, -0.08]),
-        half_size=[grasp_pose_visual_width, grasp_pose_visual_width, 0.02],
-        material=sapien.render.RenderMaterial(base_color=[0, 1, 0, 0.7]),
-    )
+    # Box to represent the gripper fingers
     builder.add_box_visual(
         pose=sapien.Pose(p=[0, 0, -0.05]),
         half_size=[grasp_pose_visual_width, grasp_width, grasp_pose_visual_width],
         material=sapien.render.RenderMaterial(base_color=[0, 1, 0, 0.7]),
     )
+
+    # Additional visual elements for clarity
     builder.add_box_visual(
         pose=sapien.Pose(
             p=[
-                0.03 - grasp_pose_visual_width * 3,
+                0.02 - grasp_pose_visual_width * 3,
                 grasp_width + grasp_pose_visual_width,
-                0.03 - 0.05,
+                0.02 - 0.05,
             ],
             q=quaternions.axangle2quat(np.array([0, 1, 0]), theta=np.pi / 2),
         ),
-        half_size=[0.04, grasp_pose_visual_width, grasp_pose_visual_width],
+        half_size=[0.03, grasp_pose_visual_width, grasp_pose_visual_width],
         material=sapien.render.RenderMaterial(base_color=[0, 0, 1, 0.7]),
     )
     builder.add_box_visual(
         pose=sapien.Pose(
             p=[
-                0.03 - grasp_pose_visual_width * 3,
+                0.02 - grasp_pose_visual_width * 3,
                 -grasp_width - grasp_pose_visual_width,
-                0.03 - 0.05,
+                0.02 - 0.05,
             ],
             q=quaternions.axangle2quat(np.array([0, 1, 0]), theta=np.pi / 2),
         ),
-        half_size=[0.04, grasp_pose_visual_width, grasp_pose_visual_width],
+        half_size=[0.03, grasp_pose_visual_width, grasp_pose_visual_width],
         material=sapien.render.RenderMaterial(base_color=[1, 0, 0, 0.7]),
     )
     grasp_pose_visual = builder.build_kinematic(name="grasp_pose_visual")

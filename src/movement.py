@@ -8,6 +8,9 @@ import math
 import torch
 from scipy.spatial.transform import Rotation as R
 
+# Import the FetchArmMotionPlanningSolver
+from motionplanner import FetchArmMotionPlanningSolver
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -15,13 +18,31 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 class MovementSystem:
     def __init__(self, simulator: ManiSkillSimulator):
         """
-        Initialize the Movement System with the simulator.
+        Initialize the Movement System with the simulator and motion planner.
 
         Args:
             simulator (ManiSkillSimulator): The robot simulator instance.
         """
         self.simulator = simulator
         logging.info("MovementSystem initialized.")
+
+        # Initialize the motion planner
+        self.motion_planner = FetchArmMotionPlanningSolver(
+            env=self.simulator.env,
+            debug=False,
+            vis=True,
+            base_pose=None,  # Assuming default base pose; modify if needed
+            visualize_target_grasp_pose=True,
+            print_env_info=False,  # Set to True for detailed logs
+            joint_vel_limits=0.9,
+            joint_acc_limits=0.9,
+            move_group="fetch_gripper"  # Ensure this matches Fetch's SRDF move group
+        )
+        logging.info("FetchArmMotionPlanningSolver initialized.")
+
+        # Initialize base movement parameters
+        self.base_speed = 0.5  # meters per second
+        self.rotation_speed = 1.0  # radians per second
 
     def rotate_robot(self, angle_degrees: float, step_size: float = 0.1, tolerance: float = 0.01, max_steps: int = 100):
         """
@@ -40,8 +61,6 @@ class MovementSystem:
         if not initial_location:
             logging.error("Initial location not found. Aborting rotation.")
             return
-        print("initial_location::")
-        print(initial_location)
 
         _, _, _, initial_theta = initial_location
         target_theta = self.normalize_angle(initial_theta + angle_radians)
@@ -64,7 +83,7 @@ class MovementSystem:
 
             # Create the action vector for rotation
             action_vector = np.zeros(self.simulator.env.action_space.shape, dtype=np.float32)
-            base_rotation_index = 12  # 'root_z_rotation_joint' controls base rotation at index 14
+            base_rotation_index = 12  # 'root_z_rotation_joint' controls base rotation at index 12
             action_vector[base_rotation_index] = angular_velocity
 
             # Execute the rotation action
@@ -81,37 +100,111 @@ class MovementSystem:
         self.simulator.env.step(action_vector)
         logging.info("Rotation completed.")
 
-
-    def go_to(self, target_coords: Tuple[float, float, float]):
+    def navigate_to(self, target_coords: Tuple[float, float, float]):
         """
-        Move the robot to the target coordinates.
+        Navigate the robot's base to the target coordinates.
 
         Args:
-            target_coords (Tuple[float, float, float]): Target (x, y, theta) in meters and radians.
+            target_coords (Tuple[float, float, float]): Target (x, y, z) in meters.
         """
-        logging.info(f"Moving to coordinates: {target_coords}")
+        logging.info(f"Navigating to coordinates: {target_coords}")
         current_coords = self.find_current_location()
         if not current_coords:
-            logging.error("Current location not found. Cannot move to target.")
+            logging.error("Current location not found. Cannot navigate to target.")
             return
 
         delta_x = target_coords[0] - current_coords[0]
         delta_y = target_coords[1] - current_coords[1]
-        distance = math.hypot(delta_x, delta_y)
+        delta_z = target_coords[2] - current_coords[2]
+        distance = math.sqrt(delta_x**2 + delta_y**2 + delta_z**2)
         angle_to_target = math.atan2(delta_y, delta_x)
-        angle_diff = self.normalize_angle(angle_to_target - current_coords[3])
+        angle_diff = self.normalize_angle(angle_to_target - current_coords[3])  # Assuming current_theta is yaw
 
         # Proportional controller gains
         K_linear = 0.5
         K_angular = 1.0
 
         # Calculate velocities
-        linear_velocity = np.clip(K_linear * distance, -1.0, 1.0)
-        angular_velocity = np.clip(K_angular * angle_diff, -2.0, 2.0)
+        linear_velocity = np.clip(K_linear * distance, -self.base_speed, self.base_speed)
+        angular_velocity = np.clip(K_angular * angle_diff, -self.rotation_speed, self.rotation_speed)
 
         logging.debug(f"Computed velocities - Linear: {linear_velocity:.2f}, Angular: {angular_velocity:.2f}")
 
-        self.simulator.set_velocity(linear=linear_velocity, angular=angular_velocity)
+        # Create the action vector for base movement
+        action_vector = np.zeros(self.simulator.env.action_space.shape, dtype=np.float32)
+        # Assuming indices for linear and angular velocities; adjust based on actual action space
+        action_vector[0] = linear_velocity  # Forward/backward
+        action_vector[1] = angular_velocity  # Rotation
+
+        # Execute the movement action
+        self.simulator.env.step(action_vector)
+
+    def fetch_object(self, x0: float, y0: float, z0: float):
+        """
+        Move the robot to the specified coordinates and fetch the object located there.
+
+        Args:
+            x0 (float): Target x-coordinate in meters.
+            y0 (float): Target y-coordinate in meters.
+            z0 (float): Target z-coordinate in meters.
+        """
+        logging.info(f"Starting fetch operation for object at ({x0}, {y0}, {z0}).")
+
+        # Step 1: Navigate to the vicinity of the target coordinates
+        target_position = (x0, y0, z0)
+        self.navigate_to(target_position)
+        logging.info(f"Navigated to target position: {target_position}")
+
+        # Step 2: Lower the arm to prepare for grasping
+        arm_down_vector = np.array([1.0, 1.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]).reshape(1, 13)
+        logging.info("Lowering the arm to prepare for grasping.")
+        self.simulator.env.step(arm_down_vector)
+        logging.info("Arm lowered.")
+
+        # Step 3: Plan and execute the motion to grasp the object
+        logging.info("Planning motion to grasp the object.")
+        target_grasp_pose = self.calculate_grasp_pose(x0, y0, z0)
+        result = self.motion_planner.move_to_pose_with_RRTConnect(pose=target_grasp_pose)
+
+        if result == -1:
+            logging.error("Motion planning to grasp pose failed.")
+            return
+
+        logging.info("Motion planning and execution to grasp pose succeeded.")
+
+        # Step 4: Close the gripper to grasp the object
+        logging.info("Closing the gripper to grasp the object.")
+        success = self.grasp_object(gripper_position=1.0)
+        if not success:
+            logging.error("Gripper failed to close properly.")
+            return
+        logging.info("Gripper closed.")
+
+        # Step 5: Lift the arm back to a safe position
+        arm_up_vector = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.0, 0]).reshape(1, 13)
+        logging.info("Lifting the arm with the object.")
+        self.simulator.env.step(arm_up_vector)
+        logging.info("Arm lifted.")
+
+    def calculate_grasp_pose(self, x0: float, y0: float, z0: float) -> 'sapien.Pose':
+        """
+        Calculate the target grasp pose based on the object's coordinates.
+
+        Args:
+            x0 (float): Object's x-coordinate in meters.
+            y0 (float): Object's y-coordinate in meters.
+            z0 (float): Object's z-coordinate in meters.
+
+        Returns:
+            sapien.Pose: The calculated grasp pose.
+        """
+        # Define the desired grasp position slightly above the object
+        grasp_position = np.array([x0, y0, z0 + 0.1])  # 10 cm above the object
+        # Define the desired orientation (e.g., facing downward)
+        grasp_orientation = R.from_euler('xyz', [0, math.pi, 0]).as_quat()
+        grasp_pose = sapien.Pose(p=grasp_position, q=grasp_orientation)
+        logging.debug(f"Calculated grasp pose: Position={grasp_position}, Orientation={grasp_orientation}")
+        return grasp_pose
 
     def grasp_object(self, gripper_position: float = 1.0) -> bool:
         """
@@ -146,12 +239,16 @@ class MovementSystem:
         Returns:
             bool: True if action executed, False otherwise.
         """
-        action_vector = np.zeros(self.simulator.env.action_space.shape, dtype=np.float32)
-        gripper_index = 0  # Update based on actual action space
-        action_vector[gripper_index] = position
-        self.simulator.move_to(action_vector)
-        logging.info("Gripper action executed.")
-        return True  # Placeholder for actual verification
+        try:
+            action_vector = np.zeros(self.simulator.env.action_space.shape, dtype=np.float32)
+            gripper_index = 12  # Update based on actual action space index for Fetch's gripper
+            action_vector[gripper_index] = position
+            self.simulator.env.step(action_vector)
+            logging.info("Gripper action executed.")
+            return True  # Placeholder for actual verification
+        except Exception as e:
+            logging.error(f"Failed to set gripper position: {e}")
+            return False
 
     def find_current_location(self) -> Optional[Tuple[float, float, float, float]]:
         """
@@ -194,7 +291,6 @@ class MovementSystem:
         logging.debug(f"Current location - x: {base_x:.2f}, y: {base_y:.2f}, z: {base_z:.2f}, yaw: {yaw:.2f} radians")
         return (base_x, base_y, base_z, yaw)
 
-
     @staticmethod
     def normalize_angle(angle: float) -> float:
         """
@@ -207,7 +303,7 @@ class MovementSystem:
             float: The normalized angle in radians.
         """
         return (angle + math.pi) % (2 * math.pi) - math.pi
-        
+
     def move_arm_down_to_clear_view(self):
         """
         Moves the robot's arm down to ensure it does not block the head camera's view.
@@ -218,11 +314,10 @@ class MovementSystem:
         """
         # Create the action vector with all zeros (no movement for other joints)
         for _ in range(100):
-            action_vector = action = np.array([100.0, 100.0, 100.0, 100.0, 0.0, 0.0, 0.0, 0.0,0.0, 0.0, 0.0, 0.0, 0.0]).reshape(1, 13)
+            action_vector = np.array([1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]).reshape(1, 13)
             obs, _, done, _, _ = self.simulator.env.step(action_vector)
             if done:
                 break
 
         logging.info("Moved the arm down to clear the head camera's view.")
-
         return obs
