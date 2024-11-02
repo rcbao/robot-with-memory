@@ -3,7 +3,7 @@
 import cv2
 from ultralytics import YOLO
 from typing import List
-from object import Object  # Ensure object.py contains the Object class
+from sim_object import Object  # Ensure object.py contains the Object class
 from simulator import ManiSkillSimulator
 import numpy as np
 import torch

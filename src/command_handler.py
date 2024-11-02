@@ -1,7 +1,7 @@
 # /src/command_handler.py
 
 from typing import Optional
-from object import Object
+from sim_object import Object
 from memory import Memory
 from vision import VisionSystem
 from movement import MovementSystem

@@ -3,7 +3,7 @@
 import json
 import re
 from typing import Optional, Tuple, List
-from object import Object  
+from sim_object import Object  
 import logging
 import os
 
