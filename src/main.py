@@ -10,11 +10,8 @@ from robot import Robot
 from maniskill_simulator import ManiSkillSimulator
 
 def get_robot_request() -> str:
-    """
-    Placeholder for getting user input.
-    Replace with actual input method as needed (e.g., voice command).
-    """
-    return input("Enter command (e.g., 'Remember dark grey trash can location'): ")
+    request_label = "Enter command (e.g., 'Remember dark grey trash can location'): "
+    return input(request_label)
 
 def main():
     # Initialize the simulator
@@ -50,7 +47,7 @@ def main():
                     response = "Command not recognized."
 
             command_handler.provide_feedback_to_user(response)
-            time.sleep(1)  # Brief pause between commands
+            time.sleep(1)  
 
     except KeyboardInterrupt:
         print("\nShutting down simulation.")
