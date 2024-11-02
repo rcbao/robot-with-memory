@@ -1,6 +1,6 @@
 # /src/movement.py
 
-from maniskill_simulator import ManiSkillSimulator
+from simulator import ManiSkillSimulator
 from typing import Tuple, Optional
 import numpy as np
 import logging

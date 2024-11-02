@@ -5,7 +5,7 @@ from vision import VisionSystem
 from movement import MovementSystem
 from language_processor import LanguageProcessor
 from command_handler import CommandHandler
-from maniskill_simulator import ManiSkillSimulator
+from simulator import ManiSkillSimulator
 
 
 class Robot:

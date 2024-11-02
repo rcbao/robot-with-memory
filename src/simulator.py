@@ -1,5 +1,3 @@
-# /simulator/maniskill_simulator.py
-
 import datetime
 import gymnasium as gym
 from typing import Optional, Tuple

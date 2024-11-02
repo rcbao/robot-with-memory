@@ -7,7 +7,7 @@ from vision import VisionSystem
 from language_processor import LanguageProcessor
 from command_handler import CommandHandler
 from robot import Robot
-from maniskill_simulator import ManiSkillSimulator
+from simulator import ManiSkillSimulator
 
 def get_robot_request() -> str:
     request_label = "Enter command (e.g., 'Remember dark grey trash can location'): "
