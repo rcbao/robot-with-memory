@@ -1,0 +1,954 @@
+[
+    {
+        "name": "kitchen_utensil_06-0",
+        "detail": "",
+        "location_description": "",
+        "x": -2.3697,
+        "y": -0.4985,
+        "z": 1.0064
+    },
+    {
+        "name": "sofa-1",
+        "detail": "",
+        "location_description": "",
+        "x": 3.9459,
+        "y": -1.7796,
+        "z": 0.4375
+    },
+    {
+        "name": "bin_02-2",
+        "detail": "",
+        "location_description": "",
+        "x": -2.1218,
+        "y": 0.4762,
+        "z": 0.4316
+    },
+    {
+        "name": "bin_03-3",
+        "detail": "",
+        "location_description": "",
+        "x": -2.2065,
+        "y": 1.7313,
+        "z": 0.3479
+    },
+    {
+        "name": "chair_05-4",
+        "detail": "",
+        "location_description": "",
+        "x": 0.568,
+        "y": -1.0056,
+        "z": 0.5851
+    },
+    {
+        "name": "box-5",
+        "detail": "",
+        "location_description": "",
+        "x": -2.2985,
+        "y": -3.8287,
+        "z": 1.7435
+    },
+    {
+        "name": "lamp_01-6",
+        "detail": "",
+        "location_description": "",
+        "x": 0.6225,
+        "y": -7.13,
+        "z": 1.1436
+    },
+    {
+        "name": "vase_01-7",
+        "detail": "",
+        "location_description": "",
+        "x": -2.2,
+        "y": -1.9418,
+        "z": 2.0094
+    },
+    {
+        "name": "table_02-8",
+        "detail": "",
+        "location_description": "",
+        "x": 0.8589,
+        "y": -1.4515,
+        "z": 0.605
+    },
+    {
+        "name": "table_04-9",
+        "detail": "",
+        "location_description": "",
+        "x": 4.182,
+        "y": -3.6756,
+        "z": 0.4378
+    },
+    {
+        "name": "remote-control_01-10",
+        "detail": "",
+        "location_description": "",
+        "x": 2.5288,
+        "y": -7.057,
+        "z": 0.0182
+    },
+    {
+        "name": "handbag-11",
+        "detail": "",
+        "location_description": "",
+        "x": -2.3236,
+        "y": 2.0796,
+        "z": 1.872
+    },
+    {
+        "name": "box-12",
+        "detail": "",
+        "location_description": "",
+        "x": 4.2011,
+        "y": -4.505,
+        "z": 0.8969
+    },
+    {
+        "name": "lamp_02-13",
+        "detail": "",
+        "location_description": "",
+        "x": 0.5801,
+        "y": -7.7372,
+        "z": 0.9917
+    },
+    {
+        "name": "knifeblock-14",
+        "detail": "",
+        "location_description": "",
+        "x": -2.3485,
+        "y": -0.3116,
+        "z": 1.0769
+    },
+    {
+        "name": "table_03-15",
+        "detail": "",
+        "location_description": "",
+        "x": 0.7344,
+        "y": -5.2366,
+        "z": 0.3289
+    },
+    {
+        "name": "table_01-16",
+        "detail": "",
+        "location_description": "",
+        "x": 2.4668,
+        "y": -5.1743,
+        "z": 0.6733
+    },
+    {
+        "name": "cushion_03-17",
+        "detail": "",
+        "location_description": "",
+        "x": 3.8583,
+        "y": -1.8048,
+        "z": 0.5682
+    },
+    {
+        "name": "chair_01-18",
+        "detail": "",
+        "location_description": "",
+        "x": 3.8433,
+        "y": 0.3701,
+        "z": 0.3649
+    },
+    {
+        "name": "rug_02-19",
+        "detail": "",
+        "location_description": "",
+        "x": 2.4857,
+        "y": -5.5738,
+        "z": 0.012
+    },
+    {
+        "name": "rug_01-20",
+        "detail": "",
+        "location_description": "",
+        "x": 3.5085,
+        "y": -1.7792,
+        "z": 0.0386
+    },
+    {
+        "name": "mat-21",
+        "detail": "",
+        "location_description": "",
+        "x": -1.5446,
+        "y": -1.5158,
+        "z": 0.0435
+    },
+    {
+        "name": "vase_02-22",
+        "detail": "",
+        "location_description": "",
+        "x": -2.2739,
+        "y": -2.0291,
+        "z": 2.2806
+    },
+    {
+        "name": "clock-23",
+        "detail": "",
+        "location_description": "",
+        "x": -2.2908,
+        "y": -3.8395,
+        "z": 0.5733
+    },
+    {
+        "name": "indoor_plant_02-24",
+        "detail": "",
+        "location_description": "",
+        "x": 0.2627,
+        "y": -3.7481,
+        "z": 0.9894
+    },
+    {
+        "name": "indoor_plant_01-25",
+        "detail": "",
+        "location_description": "",
+        "x": 3.4035,
+        "y": 4.1517,
+        "z": 1.693
+    },
+    {
+        "name": "book_01-26",
+        "detail": "",
+        "location_description": "",
+        "x": 4.2109,
+        "y": -4.9854,
+        "z": 1.1405
+    },
+    {
+        "name": "book_02-27",
+        "detail": "",
+        "location_description": "",
+        "x": 4.2039,
+        "y": -4.701,
+        "z": 1.7234
+    },
+    {
+        "name": "book_03-28",
+        "detail": "",
+        "location_description": "",
+        "x": 4.2044,
+        "y": -4.8434,
+        "z": 1.4517
+    },
+    {
+        "name": "book_04-29",
+        "detail": "",
+        "location_description": "",
+        "x": 4.207,
+        "y": -4.9803,
+        "z": 1.2156
+    },
+    {
+        "name": "book_05-30",
+        "detail": "",
+        "location_description": "",
+        "x": 4.1876,
+        "y": -4.946,
+        "z": 1.4196
+    },
+    {
+        "name": "book_06-31",
+        "detail": "",
+        "location_description": "",
+        "x": 4.1646,
+        "y": -4.4906,
+        "z": 0.5807
+    },
+    {
+        "name": "cushion_01-32",
+        "detail": "",
+        "location_description": "",
+        "x": 3.7474,
+        "y": 0.2264,
+        "z": 0.5288
+    },
+    {
+        "name": "pan_01-33",
+        "detail": "",
+        "location_description": "",
+        "x": 0.864,
+        "y": -1.8277,
+        "z": 0.2753
+    },
+    {
+        "name": "kitchen_utensil_05-34",
+        "detail": "",
+        "location_description": "",
+        "x": 1.0363,
+        "y": -1.3633,
+        "z": 0.6561
+    },
+    {
+        "name": "plate_02-35",
+        "detail": "",
+        "location_description": "",
+        "x": -2.0748,
+        "y": -2.2366,
+        "z": 0.9903
+    },
+    {
+        "name": "basket-36",
+        "detail": "",
+        "location_description": "",
+        "x": -1.9862,
+        "y": -0.039,
+        "z": 1.0839
+    },
+    {
+        "name": "kitchen_utensil_08-37",
+        "detail": "",
+        "location_description": "",
+        "x": -2.2038,
+        "y": -0.2796,
+        "z": 1.0208
+    },
+    {
+        "name": "kitchen_utensil_01-38",
+        "detail": "",
+        "location_description": "",
+        "x": 1.1381,
+        "y": -1.18,
+        "z": 0.3142
+    },
+    {
+        "name": "kitchen_utensil_02-39",
+        "detail": "",
+        "location_description": "",
+        "x": -2.3862,
+        "y": -1.8831,
+        "z": 1.0234
+    },
+    {
+        "name": "kitchen_utensil_09-40",
+        "detail": "",
+        "location_description": "",
+        "x": -2.2895,
+        "y": -0.1773,
+        "z": 1.0433
+    },
+    {
+        "name": "rack_01-41",
+        "detail": "",
+        "location_description": "",
+        "x": -2.1522,
+        "y": 2.3974,
+        "z": 0.3148
+    },
+    {
+        "name": "small_appliance_01-43",
+        "detail": "",
+        "location_description": "",
+        "x": -2.152,
+        "y": -1.1094,
+        "z": 1.0941
+    },
+    {
+        "name": "shoe_04-44",
+        "detail": "",
+        "location_description": "",
+        "x": -2.1144,
+        "y": 2.6354,
+        "z": 0.1634
+    },
+    {
+        "name": "cloth_01-45",
+        "detail": "",
+        "location_description": "",
+        "x": -2.2117,
+        "y": 2.0882,
+        "z": 1.0864
+    },
+    {
+        "name": "shoe_01-46",
+        "detail": "",
+        "location_description": "",
+        "x": -2.1599,
+        "y": 2.647,
+        "z": 0.3602
+    },
+    {
+        "name": "shoe_02-47",
+        "detail": "",
+        "location_description": "",
+        "x": -2.1578,
+        "y": 2.3807,
+        "z": 0.3602
+    },
+    {
+        "name": "shoe_03-48",
+        "detail": "",
+        "location_description": "",
+        "x": -2.0964,
+        "y": 2.1398,
+        "z": 0.3575
+    },
+    {
+        "name": "bike_01-49",
+        "detail": "",
+        "location_description": "",
+        "x": -1.6406,
+        "y": -1.9599,
+        "z": 0.4819
+    },
+    {
+        "name": "bike_02-50",
+        "detail": "",
+        "location_description": "",
+        "x": 3.5496,
+        "y": -2.9672,
+        "z": 0.4514
+    },
+    {
+        "name": "cloth_02-51",
+        "detail": "",
+        "location_description": "",
+        "x": -2.195,
+        "y": 1.9245,
+        "z": 0.9476
+    },
+    {
+        "name": "cloth_03-52",
+        "detail": "",
+        "location_description": "",
+        "x": -2.2222,
+        "y": 2.2659,
+        "z": 1.2217
+    },
+    {
+        "name": "setupbox-53",
+        "detail": "",
+        "location_description": "",
+        "x": 0.4488,
+        "y": 0.5531,
+        "z": 1.0728
+    },
+    {
+        "name": "tv_object-54",
+        "detail": "",
+        "location_description": "",
+        "x": 3.0541,
+        "y": -7.5543,
+        "z": 0.6491
+    },
+    {
+        "name": "monitor-55",
+        "detail": "",
+        "location_description": "",
+        "x": 0.4463,
+        "y": 0.5458,
+        "z": 1.5811
+    },
+    {
+        "name": "wall_cabinet_01-56",
+        "detail": "",
+        "location_description": "",
+        "x": -2.3063,
+        "y": -3.8354,
+        "z": 1.0526
+    },
+    {
+        "name": "wall_cabinet_02-57",
+        "detail": "",
+        "location_description": "",
+        "x": 4.1826,
+        "y": -4.7147,
+        "z": 1.082
+    },
+    {
+        "name": "choppingboard_02-58",
+        "detail": "",
+        "location_description": "",
+        "x": -2.4714,
+        "y": -0.2997,
+        "z": 1.1242
+    },
+    {
+        "name": "beanbag-59",
+        "detail": "",
+        "location_description": "",
+        "x": 3.8612,
+        "y": -7.3343,
+        "z": 0.3373
+    },
+    {
+        "name": "stool_02-60",
+        "detail": "",
+        "location_description": "",
+        "x": 1.5292,
+        "y": -7.7254,
+        "z": 0.5595
+    },
+    {
+        "name": "plate_01-61",
+        "detail": "",
+        "location_description": "",
+        "x": -2.0236,
+        "y": -2.6144,
+        "z": 0.9645
+    },
+    {
+        "name": "picture_01-62",
+        "detail": "",
+        "location_description": "",
+        "x": -0.363,
+        "y": 3.0247,
+        "z": 1.4212
+    },
+    {
+        "name": "towel-63",
+        "detail": "",
+        "location_description": "",
+        "x": -1.0064,
+        "y": -3.55,
+        "z": 0.4863
+    },
+    {
+        "name": "bowl_01-64",
+        "detail": "",
+        "location_description": "",
+        "x": -2.2876,
+        "y": -2.5034,
+        "z": 1.9812
+    },
+    {
+        "name": "bowl_02-65",
+        "detail": "",
+        "location_description": "",
+        "x": -2.3042,
+        "y": -2.246,
+        "z": 1.9676
+    },
+    {
+        "name": "bowl_03-66",
+        "detail": "",
+        "location_description": "",
+        "x": -2.3,
+        "y": -2.0269,
+        "z": 1.9598
+    },
+    {
+        "name": "picture_03-67",
+        "detail": "",
+        "location_description": "",
+        "x": -2.2021,
+        "y": -0.4088,
+        "z": 1.0591
+    },
+    {
+        "name": "picture_02-68",
+        "detail": "",
+        "location_description": "",
+        "x": -2.4349,
+        "y": 1.218,
+        "z": 1.5332
+    },
+    {
+        "name": "bowl_07-69",
+        "detail": "",
+        "location_description": "",
+        "x": 0.8145,
+        "y": -1.8678,
+        "z": 0.6531
+    },
+    {
+        "name": "cup_01-70",
+        "detail": "",
+        "location_description": "",
+        "x": -2.2348,
+        "y": -2.5456,
+        "z": 0.9839
+    },
+    {
+        "name": "cup_03-71",
+        "detail": "",
+        "location_description": "",
+        "x": -2.0097,
+        "y": -2.6213,
+        "z": 0.9994
+    },
+    {
+        "name": "cup_05-72",
+        "detail": "",
+        "location_description": "",
+        "x": -2.2712,
+        "y": 0.0881,
+        "z": 1.6192
+    },
+    {
+        "name": "cup_02-73",
+        "detail": "",
+        "location_description": "",
+        "x": -2.2142,
+        "y": -2.0346,
+        "z": 0.996
+    },
+    {
+        "name": "tv_screen-74",
+        "detail": "",
+        "location_description": "",
+        "x": 2.4815,
+        "y": -7.8291,
+        "z": 1.4001
+    },
+    {
+        "name": "beanbag-75",
+        "detail": "",
+        "location_description": "",
+        "x": 0.9891,
+        "y": -3.987,
+        "z": 0.3373
+    },
+    {
+        "name": "bowl_06-76",
+        "detail": "",
+        "location_description": "",
+        "x": -2.0148,
+        "y": -1.9436,
+        "z": 0.986
+    },
+    {
+        "name": "picture_04-77",
+        "detail": "",
+        "location_description": "",
+        "x": 4.2302,
+        "y": -4.6889,
+        "z": 1.2334
+    },
+    {
+        "name": "camera_02-78",
+        "detail": "",
+        "location_description": "",
+        "x": 0.4765,
+        "y": 0.5908,
+        "z": 1.8125
+    },
+    {
+        "name": "kitchen_utensil_04-79",
+        "detail": "",
+        "location_description": "",
+        "x": -2.3822,
+        "y": -0.7212,
+        "z": 0.9958
+    },
+    {
+        "name": "chair_04-80",
+        "detail": "",
+        "location_description": "",
+        "x": 2.4825,
+        "y": -4.5786,
+        "z": 0.4791
+    },
+    {
+        "name": "remote-control_01-81",
+        "detail": "",
+        "location_description": "",
+        "x": 2.3577,
+        "y": -7.4783,
+        "z": 0.6321
+    },
+    {
+        "name": "stool_02-82",
+        "detail": "",
+        "location_description": "",
+        "x": 1.5302,
+        "y": -7.7263,
+        "z": 0.2941
+    },
+    {
+        "name": "chair_04-83",
+        "detail": "",
+        "location_description": "",
+        "x": 2.4803,
+        "y": -5.8139,
+        "z": 0.4792
+    },
+    {
+        "name": "umbrella-84",
+        "detail": "",
+        "location_description": "",
+        "x": 4.1443,
+        "y": -4.146,
+        "z": 0.5503
+    },
+    {
+        "name": "book_01-85",
+        "detail": "",
+        "location_description": "",
+        "x": 4.2109,
+        "y": -4.984,
+        "z": 1.1675
+    },
+    {
+        "name": "book_01-86",
+        "detail": "",
+        "location_description": "",
+        "x": 4.2107,
+        "y": -4.985,
+        "z": 1.1945
+    },
+    {
+        "name": "book_01-87",
+        "detail": "",
+        "location_description": "",
+        "x": 4.1995,
+        "y": -4.7223,
+        "z": 1.422
+    },
+    {
+        "name": "book_01-88",
+        "detail": "",
+        "location_description": "",
+        "x": 4.1992,
+        "y": -4.9938,
+        "z": 0.5552
+    },
+    {
+        "name": "book_01-89",
+        "detail": "",
+        "location_description": "",
+        "x": 4.1998,
+        "y": -5.0109,
+        "z": 0.5822
+    },
+    {
+        "name": "book_02-90",
+        "detail": "",
+        "location_description": "",
+        "x": 4.1759,
+        "y": -4.4991,
+        "z": 0.6482
+    },
+    {
+        "name": "book_03-91",
+        "detail": "",
+        "location_description": "",
+        "x": 4.2031,
+        "y": -4.9679,
+        "z": 1.4392
+    },
+    {
+        "name": "book_03-92",
+        "detail": "",
+        "location_description": "",
+        "x": 4.2051,
+        "y": -4.5736,
+        "z": 1.4418
+    },
+    {
+        "name": "book_04-93",
+        "detail": "",
+        "location_description": "",
+        "x": 4.2067,
+        "y": -4.987,
+        "z": 1.2309
+    },
+    {
+        "name": "book_04-94",
+        "detail": "",
+        "location_description": "",
+        "x": 4.2051,
+        "y": -5.0676,
+        "z": 0.6684
+    },
+    {
+        "name": "book_04-95",
+        "detail": "",
+        "location_description": "",
+        "x": 4.2068,
+        "y": -4.556,
+        "z": 0.2114
+    },
+    {
+        "name": "book_05-96",
+        "detail": "",
+        "location_description": "",
+        "x": 4.1886,
+        "y": -4.482,
+        "z": 1.4196
+    },
+    {
+        "name": "book_05-97",
+        "detail": "",
+        "location_description": "",
+        "x": 4.188,
+        "y": -4.4188,
+        "z": 0.2013
+    },
+    {
+        "name": "cushion_03-98",
+        "detail": "",
+        "location_description": "",
+        "x": 3.7795,
+        "y": -1.2523,
+        "z": 0.5606
+    },
+    {
+        "name": "cushion_03-99",
+        "detail": "",
+        "location_description": "",
+        "x": 3.8005,
+        "y": -2.2913,
+        "z": 0.5603
+    },
+    {
+        "name": "indoor_plant_02-100",
+        "detail": "",
+        "location_description": "",
+        "x": 4.0488,
+        "y": -0.3242,
+        "z": 0.9894
+    },
+    {
+        "name": "chair_01-101",
+        "detail": "",
+        "location_description": "",
+        "x": -0.992,
+        "y": -3.7066,
+        "z": 0.3649
+    },
+    {
+        "name": "book_01-102",
+        "detail": "",
+        "location_description": "",
+        "x": -2.2403,
+        "y": -3.7512,
+        "z": 1.3922
+    },
+    {
+        "name": "book_05-103",
+        "detail": "",
+        "location_description": "",
+        "x": -2.2573,
+        "y": -3.8766,
+        "z": 1.4097
+    },
+    {
+        "name": "chair_05-104",
+        "detail": "",
+        "location_description": "",
+        "x": 0.3366,
+        "y": -1.5099,
+        "z": 0.5851
+    },
+    {
+        "name": "choppingboard_02-105",
+        "detail": "",
+        "location_description": "",
+        "x": 1.0801,
+        "y": -1.186,
+        "z": 0.2413
+    },
+    {
+        "name": "monitor_stand-106",
+        "detail": "",
+        "location_description": "",
+        "x": 0.4489,
+        "y": 0.6307,
+        "z": 1.408
+    },
+    {
+        "name": "sponge_dish-107",
+        "detail": "",
+        "location_description": "",
+        "x": -2.3595,
+        "y": -2.0195,
+        "z": 0.9901
+    },
+    {
+        "name": "lamp_02-108",
+        "detail": "",
+        "location_description": "",
+        "x": -2.3806,
+        "y": -2.3775,
+        "z": 1.1461
+    },
+    {
+        "name": "kitchen_utensil_03-109",
+        "detail": "",
+        "location_description": "",
+        "x": -2.4325,
+        "y": -0.808,
+        "z": 1.0736
+    },
+    {
+        "name": "kitchen_utensil_03-110",
+        "detail": "",
+        "location_description": "",
+        "x": -2.4328,
+        "y": -0.7532,
+        "z": 1.0735
+    },
+    {
+        "name": "kitchen_utensil_03-111",
+        "detail": "",
+        "location_description": "",
+        "x": -2.4331,
+        "y": -0.6984,
+        "z": 1.0735
+    },
+    {
+        "name": "kitchen_utensil_03-112",
+        "detail": "",
+        "location_description": "",
+        "x": -2.4336,
+        "y": -0.6421,
+        "z": 1.0735
+    },
+    {
+        "name": "kitchen_utensil_03-113",
+        "detail": "",
+        "location_description": "",
+        "x": -2.3641,
+        "y": -0.8014,
+        "z": 1.0457
+    },
+    {
+        "name": "kitchen_utensil_03-114",
+        "detail": "",
+        "location_description": "",
+        "x": -2.3645,
+        "y": -0.7437,
+        "z": 1.0457
+    },
+    {
+        "name": "kitchen_utensil_03-115",
+        "detail": "",
+        "location_description": "",
+        "x": -2.3646,
+        "y": -0.6884,
+        "z": 1.0456
+    },
+    {
+        "name": "kitchen_utensil_03-116",
+        "detail": "",
+        "location_description": "",
+        "x": -2.3649,
+        "y": -0.6338,
+        "z": 1.0456
+    },
+    {
+        "name": "shoebox_01-117",
+        "detail": "",
+        "location_description": "",
+        "x": -2.2076,
+        "y": 1.728,
+        "z": 0.7364
+    },
+    {
+        "name": "bin_01-118",
+        "detail": "",
+        "location_description": "",
+        "x": -0.5261,
+        "y": 0.9718,
+        "z": 0.3136
+    },
+    {
+        "name": "tvstand-119",
+        "detail": "",
+        "location_description": "",
+        "x": 2.6399,
+        "y": -7.7231,
+        "z": 0.3762
+    }
+]
