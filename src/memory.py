@@ -1,123 +1,80 @@
 # /src/memory.py
 
-import sqlite3
-from typing import Optional, Tuple
-from object import Object  # Ensure the Object class is defined in object.py
+import json
+import re
+from typing import Optional, Tuple, List
+from object import Object  
 import logging
-
+import os
 
 
 class Memory:
-    def __init__(self, db_path: str = "memory.db"):
+    def __init__(self, json_path: str = "memory.json"):
         """
-        Initialize the Memory system with a SQLite database.
-
-        Optional argument:
-            db_path (str): Path to the SQLite database file.
+        Initialize the Memory system with a JSON file.
         """
-        self.db_path = db_path
-        try:
-            self.conn = sqlite3.connect(self.db_path)
-            logging.info(f"Connected to SQLite database at {self.db_path}.")
-            self.create_table()
-        except sqlite3.Error as e:
-            logging.error(f"Failed to connect to database: {e}")
-            raise
-
-    def create_table(self):
-        """
-        Create the objects table if it doesn't exist.
-        """
-        try:
-            cursor = self.conn.cursor()
-            cursor.execute(
-                """
-                CREATE TABLE IF NOT EXISTS objects (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL,
-                    detail TEXT,
-                    location_description TEXT,
-                    x REAL,
-                    y REAL,
-                    z REAL,
-                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-                )
-            """
-            )
-            self.conn.commit()
-            logging.info("Ensured that the 'objects' table exists in the database.")
-        except sqlite3.Error as e:
-            logging.error(f"Failed to create table: {e}")
-            raise
+        self.json_path = json_path
+        self.objects: List[dict] = []
+        if os.path.exists(self.json_path):
+            with open(self.json_path, 'r') as file:
+                self.objects = json.load(file)
+                logging.info(f"Loaded memory from {self.json_path}.")
+        else:
+            with open(self.json_path, 'w') as file:
+                json.dump(self.objects, file)
+                logging.info(f"Created new memory file at {self.json_path}.")
 
     def save_object_to_memory(self, obj: Object):
         """
-        Save an object to the memory database.
-
-        Args:
-            obj (Object): The object to save.
+        Save an object to the memory JSON file.
         """
-        try:
-            cursor = self.conn.cursor()
-            x, y, z = obj.location_3d_coords
-            cursor.execute(
-                """
-                INSERT INTO objects (name, detail, location_description, x, y, z)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """,
-                (obj.name, obj.detail, obj.location_description, x, y, z),
-            )
-            self.conn.commit()
-            logging.info(f"Saved object '{obj.name}' to memory.")
-        except sqlite3.Error as e:
-            logging.error(f"Failed to save object to memory: {e}")
-            raise
+        obj_data = {
+            "name": obj.name,
+            "detail": obj.detail,
+            "location_description": obj.location_description,
+            "x": obj.location_3d_coords[0],
+            "y": obj.location_3d_coords[1],
+            "z": obj.location_3d_coords[2]
+        }
+        self.objects.append(obj_data)
+        with open(self.json_path, 'w') as file:
+            json.dump(self.objects, file, indent=4)
+        logging.info(f"Saved object '{obj.name}' to memory.")
+
+    def convert_name(self, name: str) -> str:
+        # Remove numeric suffixes (e.g., "book_01-102" --> "book")
+        name = re.sub(r'_\d+-\d+$', '', name)
+        # Replace underscores with spaces (e.g., "indoor_plant" --> "indoor plant")
+        return name.replace('_', ' ')
 
     def find_object_from_past_memory(self, object_name: str, object_detail: str) -> Optional[Object]:
         """
-        Retrieve the most recent object matching the name and detail from memory.
+        Retrieve the most recent object matching the name and detail from memory, 
+        with support for fuzzy name matching.
+        """
 
-        Arguments:
-            object_name (str): The name of the object.
-            object_detail (str): The detail/description of the object.
+        converted_object_name = self.convert_name(object_name.lower())
 
-        Returns:
-            Optional[Object]: The found object or None if not found.
-        """
-        try:
-            cursor = self.conn.cursor()
-            cursor.execute(
-                """
-                SELECT name, detail, location_description, x, y, z FROM objects
-                WHERE LOWER(name) = LOWER(?) AND LOWER(detail) LIKE LOWER(?)
-                ORDER BY timestamp DESC
-                LIMIT 1
-            """,
-                (object_name, f"%{object_detail}%"),
-            )
-            row = cursor.fetchone()
-            if row:
-                name, detail, location_description, x, y, z = row
-                logging.info(f"Found object '{name}' in past memory.")
-                return Object(name, detail, location_description, (x, y, z))
-            logging.info(f"No matching object found in past memory for '{object_name}'.")
-            return None
-        except sqlite3.Error as e:
-            logging.error(f"Failed to retrieve object from memory: {e}")
-            raise
+        for obj in reversed(self.objects):
+            converted_name = self.convert_name(obj["name"].lower())
+            if converted_name == converted_object_name and object_detail.lower() in obj["detail"].lower():
+                logging.info(f"Found object '{obj['name']}' in memory.")
+                return Object(
+                    name=obj["name"],
+                    detail=obj["detail"],
+                    location_description=obj["location_description"],
+                    location_3d_coords=(obj["x"], obj["y"], obj["z"])
+                )
+        logging.info(f"No matching object found in memory for '{object_name}'.")
+        return None
 
-    def close(self):
-        """
-        Close the database connection.
-        """
-        try:
-            self.conn.close()
-            logging.info("Closed the database connection.")
-        except sqlite3.Error as e:
-            logging.error(f"Failed to close database connection: {e}")
+if __name__ == "__main__":
+    mem = Memory("../memory.json")
+    name1 = mem.convert_name("book_01-102")
+    name2 = mem.convert_name("indoor_plant_02-100")
 
-    def __del__(self):
-        """
-        Ensure the database connection is closed when the memory instance is destroyed.
-        """
-        self.close()
+    print(name1)
+    print(name2)
+
+    obj_1 = mem.find_object_from_past_memory("indoor plant", "")
+    print(obj_1)

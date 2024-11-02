@@ -18,8 +18,7 @@ class Object:
             name (str): The name of the object (e.g., "cup").
             detail (str): Additional details or attributes of the object (e.g., "red", "ceramic").
             location_description (str): A textual description of the object's location (e.g., "kitchen table").
-            location_3d_coords (Optional[Tuple[float, float, float]]): The 3D coordinates of the object in the environment.
-                Defaults to None if not provided.
+            location_3d_coords (Optional[Tuple[float, float, float]]): The object's 3D coordinates
         """
         self.name = name
         self.detail = detail
