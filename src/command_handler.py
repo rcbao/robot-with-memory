@@ -24,6 +24,20 @@ class CommandHandler:
         self.movement = movement
         self.language_processor = language_processor
 
+    def format_object_location_desc(self, obj):
+        print("object::")
+        print(obj)
+        name = obj.name
+        coords, description = obj.location_3d_coords, obj.location_description
+        if name:
+            if coords and description:
+                return f"{obj.name} is located at {obj.location_description} (coordinates: {coords})"
+            if coords:
+                return f"{obj.name} is located at coordinates {coords}"
+            if description:
+                return f"{obj.name} is located at {obj.location_description}"
+        return "<Object is empty>"
+
     def find_object_from_current_view(self, name: str, detail: str):
         """
         Attempt to find the object in the current view.
@@ -123,8 +137,10 @@ class CommandHandler:
         """
         obj = self.memory.find_object_from_past_memory(name, detail)
 
+        description = self.format_object_location_desc(obj)
+
         if obj:
-            response = f"The {obj.name} is located at {obj.location_description}."
+            response = f"The {description}."
             return response
 
         fallback_response = "I don't have a record of that object."

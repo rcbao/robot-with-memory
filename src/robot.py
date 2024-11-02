@@ -28,5 +28,4 @@ class Robot:
         """
         Perform any necessary cleanup before shutting down the robot.
         """
-        self.memory.close()
-        # Add any additional cleanup if necessary
+        pass

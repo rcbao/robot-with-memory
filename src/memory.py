@@ -47,7 +47,7 @@ class Memory:
         # Replace underscores with spaces (e.g., "indoor_plant" --> "indoor plant")
         return name.replace('_', ' ')
 
-    def find_object_from_past_memory(self, object_name: str, object_detail: str) -> Optional[Object]:
+    def find_object_from_past_memory(self, object_name: str, detail: str) -> Optional[Object]:
         """
         Retrieve the most recent object matching the name and detail from memory, 
         with support for fuzzy name matching.
@@ -57,7 +57,11 @@ class Memory:
 
         for obj in reversed(self.objects):
             converted_name = self.convert_name(obj["name"].lower())
-            if converted_name == converted_object_name and object_detail.lower() in obj["detail"].lower():
+
+            name_match = converted_name == converted_object_name
+            detail_match = (not detail) or (detail.lower() in obj["detail"].lower())
+
+            if name_match and detail_match:
                 logging.info(f"Found object '{obj['name']}' in memory.")
                 return Object(
                     name=obj["name"],
