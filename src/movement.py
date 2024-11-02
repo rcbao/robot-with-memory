@@ -142,7 +142,7 @@ class MovementSystem:
             if done:
                 break
 
-    def fetch_object(self, x0: float, y0: float, z0: float):
+    def acquire_object(self, x0: float, y0: float, z0: float):
         """
         Move the robot to the specified coordinates and fetch the object located there.
 

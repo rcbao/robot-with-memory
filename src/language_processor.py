@@ -10,31 +10,28 @@ load_dotenv()
 
 client = OpenAI()
 
-def clean_code_block(s: str) -> str:
-    return s.removeprefix("```json").removesuffix("```").strip()
+def remove_json_block(llm_response: str) -> str:
+    llm_response = llm_response.removeprefix("```json")
+    llm_response = llm_response.removesuffix("```")
+    return llm_response.strip()
 
 class LanguageProcessor:
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self):
         """
         Initialize the LanguageProcessor with OpenAI API key.
-
-        Args:
-            api_key (Optional[str]): OpenAI API key. If not provided, it will be read from the environment variable 'OPENAI_API_KEY'.
         """
-        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
-        if not self.api_key:
-            raise ValueError(
-                "OpenAI API key not provided. Set the 'OPENAI_API_KEY' environment variable."
-            )
+        self.api_key = os.getenv("OPENAI_API_KEY")
 
-    def interpret_user_prompt(
-        self, user_prompt: str
-    ) -> Tuple[bool, Optional[str], Optional[str], Optional[str]]:
+        if not self.api_key:
+            error_message = "OpenAI API key not provided. Set the 'OPENAI_API_KEY' environment variable."
+            raise ValueError(error_message)
+
+    def parse_user_input(self, user_input: str) -> Tuple[bool, Optional[str], Optional[str], Optional[str]]:
         """
         Interpret the user prompt to extract action, object name, and details using GPT-4.
 
         Args:
-            user_prompt (str): The input command from the user.
+            user_input (str): The input command from the user.
 
         Returns:
             Tuple containing:
@@ -43,30 +40,30 @@ class LanguageProcessor:
                 - object_name (Optional[str]): The name of the object.
                 - detail (Optional[str]): Additional details about the object.
         """
-        prompt = (
+        system_message = "You are a helpful assistant that parses user commands related to object memory and fetching."
+        user_message = (
             f"Parse the following user command and extract the action, object name, and detail.\n\n"
-            f'Command: "{user_prompt}"\n\n'
+            f'Command: "{user_input}"\n\n'
             f"Format the response as JSON with keys: relevancy (true/false), action, object_name, detail.\n"
             f"If the command is not relevant to remembering, recalling, or fetching objects, set relevancy to false."
         )
 
+        messages = [
+            {"role": "system", "content": system_message},
+            {"role": "user", "content": user_message},
+        ]
+
         try:
             response = client.chat.completions.create(
                 model="gpt-4o",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are a helpful assistant that parses user commands related to object memory and fetching.",
-                    },
-                    {"role": "user", "content": prompt},
-                ],
+                messages=messages,
                 max_tokens=150,
                 temperature=0,
             )
 
             response_content = response.choices[0].message.content.strip()
             print(f"LLM Response:\n----------\n{response_content}\n----------\n")
-            response_content = clean_code_block(response_content)
+            response_content = remove_json_block(response_content)
             parsed = json.loads(response_content)
 
             relevancy = parsed.get("relevancy", False)
@@ -90,21 +87,21 @@ class LanguageProcessor:
         Returns:
             str: The generated response.
         """
-        prompt = (
+        system_message = "You are a friendly and helpful assistant."
+        user_message = (
             f"Generate a friendly and helpful response to the following message:\n\n"
             f'"{context}"'
         )
 
+        messages = [
+            {"role": "system", "content": system_message},
+            {"role": "user", "content": user_message},
+        ]
+
         try:
             response = client.chat.completions.create(
                 model="gpt-4o",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are a friendly and helpful assistant.",
-                    },
-                    {"role": "user", "content": prompt},
-                ],
+                messages=messages,
                 max_tokens=100,
                 temperature=0.7,
             )

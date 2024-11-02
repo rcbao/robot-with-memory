@@ -34,7 +34,7 @@ def main():
     try:
         while True:
             user_prompt = get_robot_request()
-            relevancy, action, object_name, detail = command_handler.interpret_user_prompt(user_prompt)
+            relevancy, action, object_name, detail = command_handler.parse_user_input(user_prompt)
 
             if not relevancy:
                 response = command_handler.handle_irrelevant_prompt(user_prompt)
