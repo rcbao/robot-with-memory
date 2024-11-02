@@ -114,51 +114,6 @@ class ManiSkillSimulator:
         camera_image = camera_image.squeeze(0).cpu().numpy() 
         return camera_image
 
-    def move_to(self, action_vector: np.ndarray):
-        """
-        Move the robot by sending an action vector.
-
-        Args:
-            action_vector (np.ndarray): The action vector conforming to the environment's action space.
-        """
-        if not isinstance(action_vector, np.ndarray):
-            logging.error("action_vector must be a NumPy array.")
-            raise TypeError("action_vector must be a NumPy array.")
-        
-        if action_vector.shape != self.env.action_space.shape:
-            logging.error(f"action_vector must have shape {self.env.action_space.shape}, but got {action_vector.shape}.")
-            raise ValueError(f"action_vector must have shape {self.env.action_space.shape}, but got {action_vector.shape}.")
-        
-        logging.debug(f"Executing action: {action_vector}")
-        obs, reward, terminated, truncated, info = self.env.step(action_vector)
-        logging.debug(f"Action executed. Reward: {reward}, Terminated: {terminated}, Truncated: {truncated}")
-        
-        if terminated or truncated:
-            logging.info("Episode ended. Resetting environment.")
-            self.env.reset()
-
-    def set_velocity(self, linear: float, angular: float):
-        """
-        Set the robot's base linear and angular velocity.
-
-        Args:
-            linear (float): Linear velocity.
-            angular (float): Angular velocity.
-        """
-        logging.info(f"Setting robot velocity. Linear: {linear}, Angular: {angular}")
-        # Create an action vector based on desired velocities
-        action_vector = np.zeros(self.env.action_space.shape, dtype=np.float32)
-        
-        # Assign linear and angular velocities to specific indices based on the action space
-        # IMPORTANT: Replace the indices below based on your actual action space mapping
-        linear_index = 1   # Example index for linear velocity
-        angular_index = 2  # Example index for angular velocity
-        
-        action_vector[linear_index] = linear
-        action_vector[angular_index] = angular
-        
-        self.move_to(action_vector)
-
     def close(self):
         """
         Close the ManiSkill environment.
