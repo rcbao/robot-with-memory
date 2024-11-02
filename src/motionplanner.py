@@ -98,11 +98,26 @@ class FetchArmMotionPlanningSolver:
             mplib.Planner: The initialized motion planner.
         """
         try:
-            link_names = [link.get_name() for link in self.robot.get_links()]
-            joint_names = [joint.get_name() for joint in self.robot.get_active_joints()]
+            link_names = ['torso_lift_link', 'head_pan_link', 'head_tilt_link', 'shoulder_pan_link', 'shoulder_lift_link', 
+                          'upperarm_roll_link', 'elbow_flex_link', 'forearm_roll_link', 'wrist_flex_link', 
+                          'wrist_roll_link', 'gripper_link', 'r_gripper_finger_link', 'l_gripper_finger_link']
+            
+            joint_names = ['torso_lift_joint', 'head_pan_joint', 'head_tilt_joint', 'shoulder_pan_joint', 
+                           'shoulder_lift_joint', 'upperarm_roll_joint', 'elbow_flex_joint', 'forearm_roll_joint', 
+                           'wrist_flex_joint', 'wrist_roll_joint', 'r_gripper_finger_joint', 'l_gripper_finger_joint']
+
+            print("==========")
+            print("link names::")
+            print(link_names)
+            print("joint_names::")
+            print(joint_names)
+            print("==========")
             
             # Path to the meshes directory
-            mesh_dir = os.path.dirname(self.env_agent.urdf_path) + "/meshes/"
+            mesh_dir = os.path.dirname(self.env_agent.urdf_path) + "/fetch_description/meshes/"
+
+            print("mesh dir::")
+            print(mesh_dir)
             
             # Filter links to include only those with convex collision meshes
             valid_link_names = []

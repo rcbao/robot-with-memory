@@ -7,13 +7,12 @@ import logging
 import math
 import torch
 from scipy.spatial.transform import Rotation as R
-
-# Import the FetchArmMotionPlanningSolver
 from motionplanner import FetchArmMotionPlanningSolver
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+MOCK_TARGET_LOCATION = (100, 100, 100)
 
 class MovementSystem:
     def __init__(self, simulator: ManiSkillSimulator):
@@ -26,23 +25,23 @@ class MovementSystem:
         self.simulator = simulator
         logging.info("MovementSystem initialized.")
 
+        self.DISABLE_ARM_MOVEMENT = True
+
         # Initialize the motion planner
-        self.motion_planner = FetchArmMotionPlanningSolver(
-            env=self.simulator.env,
-            debug=False,
-            vis=True,
-            base_pose=None,  # Assuming default base pose; modify if needed
-            visualize_target_grasp_pose=True,
-            print_env_info=False,  # Set to True for detailed logs
-            joint_vel_limits=0.9,
-            joint_acc_limits=0.9,
-            move_group="fetch_gripper"  # Ensure this matches Fetch's SRDF move group
-        )
-        logging.info("FetchArmMotionPlanningSolver initialized.")
+        if self.DISABLE_ARM_MOVEMENT:
+            logging.info("DISABLE_ARM_MOVEMENT set to true. Not initializing planner.")
+        else:
+            self.motion_planner = FetchArmMotionPlanningSolver(
+                env=self.simulator.env,
+                # TODO: Implement this Arm motion planner using RRT
+            )
+            logging.info("FetchArmMotionPlanningSolver initialized.")
 
         # Initialize base movement parameters
         self.base_speed = 0.5  # meters per second
         self.rotation_speed = 1.0  # radians per second
+
+
 
     def rotate_robot(self, angle_degrees: float, step_size: float = 0.1, tolerance: float = 0.01, max_steps: int = 100):
         """
@@ -128,16 +127,20 @@ class MovementSystem:
         linear_velocity = np.clip(K_linear * distance, -self.base_speed, self.base_speed)
         angular_velocity = np.clip(K_angular * angle_diff, -self.rotation_speed, self.rotation_speed)
 
-        logging.debug(f"Computed velocities - Linear: {linear_velocity:.2f}, Angular: {angular_velocity:.2f}")
+        logging.info(f"Computed velocities - Linear: {linear_velocity:.2f}, Angular: {angular_velocity:.2f}")
 
         # Create the action vector for base movement
         action_vector = np.zeros(self.simulator.env.action_space.shape, dtype=np.float32)
         # Assuming indices for linear and angular velocities; adjust based on actual action space
-        action_vector[0] = linear_velocity  # Forward/backward
-        action_vector[1] = angular_velocity  # Rotation
+        action_vector[-2] = linear_velocity  # Forward/backward
+        # action_vector[-1] = angular_velocity  # Rotation
 
         # Execute the movement action
-        self.simulator.env.step(action_vector)
+        # TODO: fix this function
+        for _ in range(100):
+            obs, _, done, _, _ = self.simulator.env.step(action_vector)
+            if done:
+                break
 
     def fetch_object(self, x0: float, y0: float, z0: float):
         """
@@ -152,39 +155,45 @@ class MovementSystem:
 
         # Step 1: Navigate to the vicinity of the target coordinates
         target_position = (x0, y0, z0)
+        if MOCK_TARGET_LOCATION:
+            target_position = MOCK_TARGET_LOCATION
         self.navigate_to(target_position)
         logging.info(f"Navigated to target position: {target_position}")
 
-        # Step 2: Lower the arm to prepare for grasping
+        # Step 2: Lower the arm using the predefined action vector
         arm_down_vector = np.array([1.0, 1.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]).reshape(1, 13)
         logging.info("Lowering the arm to prepare for grasping.")
         self.simulator.env.step(arm_down_vector)
         logging.info("Arm lowered.")
 
         # Step 3: Plan and execute the motion to grasp the object
-        logging.info("Planning motion to grasp the object.")
-        target_grasp_pose = self.calculate_grasp_pose(x0, y0, z0)
-        result = self.motion_planner.move_to_pose_with_RRTConnect(pose=target_grasp_pose)
+        if self.DISABLE_ARM_MOVEMENT:
+            logging.info("Arm movement disabled.")
+            logging.info("Fetch operation complete.")
+        else:
+            logging.info("Planning motion to grasp the object.")
+            target_grasp_pose = self.calculate_grasp_pose(x0, y0, z0)
+            result = self.motion_planner.move_to_pose_with_RRTConnect(pose=target_grasp_pose)
 
-        if result == -1:
-            logging.error("Motion planning to grasp pose failed.")
-            return
+            if result == -1:
+                logging.error("Motion planning to grasp pose failed.")
+                return
 
-        logging.info("Motion planning and execution to grasp pose succeeded.")
+            logging.info("Motion planning and execution to grasp pose succeeded.")
 
-        # Step 4: Close the gripper to grasp the object
-        logging.info("Closing the gripper to grasp the object.")
-        success = self.grasp_object(gripper_position=1.0)
-        if not success:
-            logging.error("Gripper failed to close properly.")
-            return
-        logging.info("Gripper closed.")
+            # Step 4: Close the gripper to grasp the object
+            logging.info("Closing the gripper to grasp the object.")
+            success = self.grasp_object(gripper_position=1.0)  # Correct usage
+            if not success:
+                logging.error("Gripper failed to close properly.")
+                return
+            logging.info("Gripper closed.")
 
-        # Step 5: Lift the arm back to a safe position
-        arm_up_vector = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.0, 0]).reshape(1, 13)
-        logging.info("Lifting the arm with the object.")
-        self.simulator.env.step(arm_up_vector)
-        logging.info("Arm lifted.")
+            # Step 5: Lift the arm back to a safe position
+            arm_up_vector = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.0, 0]).reshape(1, 13)
+            logging.info("Lifting the arm with the object.")
+            self.simulator.env.step(arm_up_vector)
+            logging.info("Arm lifted.")
 
     def calculate_grasp_pose(self, x0: float, y0: float, z0: float) -> 'sapien.Pose':
         """
@@ -216,6 +225,12 @@ class MovementSystem:
         Returns:
             bool: True if grasping was successful, False otherwise.
         """
+        print("grasp_object::")
+        print("gripper_position::")
+        print(gripper_position)
+        if not isinstance(gripper_position, (float, int)):
+            logging.error(f"gripper_position must be a float or int, got {type(gripper_position)}")
+            return False
         logging.info(f"Grasping object with gripper position: {gripper_position}")
         return self._set_gripper(gripper_position)
 
@@ -312,7 +327,7 @@ class MovementSystem:
         Returns:
             None
         """
-        # Create the action vector with all zeros (no movement for other joints)
+        # Create the action vector within the permissible range
         for _ in range(100):
             action_vector = np.array([1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]).reshape(1, 13)
             obs, _, done, _, _ = self.simulator.env.step(action_vector)

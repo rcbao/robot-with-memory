@@ -3,7 +3,9 @@
 import sqlite3
 from typing import Optional, Tuple
 from object import Object  # Ensure the Object class is defined in object.py
-from language_processor import LanguageProcessor
+import logging
+
+
 
 class Memory:
     def __init__(self, db_path: str = "memory.db"):
@@ -13,29 +15,40 @@ class Memory:
         Optional argument:
             db_path (str): Path to the SQLite database file.
         """
-        self.conn = sqlite3.connect(db_path)
-        self.create_table()
+        self.db_path = db_path
+        try:
+            self.conn = sqlite3.connect(self.db_path)
+            logging.info(f"Connected to SQLite database at {self.db_path}.")
+            self.create_table()
+        except sqlite3.Error as e:
+            logging.error(f"Failed to connect to database: {e}")
+            raise
 
     def create_table(self):
         """
         Create the objects table if it doesn't exist.
         """
-        cursor = self.conn.cursor()
-        cursor.execute(
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS objects (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    detail TEXT,
+                    location_description TEXT,
+                    x REAL,
+                    y REAL,
+                    z REAL,
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
             """
-            CREATE TABLE IF NOT EXISTS objects (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                detail TEXT,
-                location_description TEXT,
-                x REAL,
-                y REAL,
-                z REAL,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
             )
-        """
-        )
-        self.conn.commit()
+            self.conn.commit()
+            logging.info("Ensured that the 'objects' table exists in the database.")
+        except sqlite3.Error as e:
+            logging.error(f"Failed to create table: {e}")
+            raise
 
     def save_object_to_memory(self, obj: Object):
         """
@@ -44,16 +57,21 @@ class Memory:
         Args:
             obj (Object): The object to save.
         """
-        cursor = self.conn.cursor()
-        x, y, z = (obj.location_3d_coords if obj.location_3d_coords else (None, None, None))
-        cursor.execute(
-            """
-            INSERT INTO objects (name, detail, location_description, x, y, z)
-            VALUES (?, ?, ?, ?, ?, ?)
+        try:
+            cursor = self.conn.cursor()
+            x, y, z = obj.location_3d_coords
+            cursor.execute(
+                """
+                INSERT INTO objects (name, detail, location_description, x, y, z)
+                VALUES (?, ?, ?, ?, ?, ?)
             """,
-            (obj.name, obj.detail, obj.location_description, x, y, z),
-        )
-        self.conn.commit()
+                (obj.name, obj.detail, obj.location_description, x, y, z),
+            )
+            self.conn.commit()
+            logging.info(f"Saved object '{obj.name}' to memory.")
+        except sqlite3.Error as e:
+            logging.error(f"Failed to save object to memory: {e}")
+            raise
 
     def find_object_from_past_memory(self, object_name: str, object_detail: str) -> Optional[Object]:
         """
@@ -66,109 +84,40 @@ class Memory:
         Returns:
             Optional[Object]: The found object or None if not found.
         """
-        cursor = self.conn.cursor()
-        cursor.execute(
-            """
-            SELECT name, detail, location_description, x, y, z FROM objects
-            WHERE name = ? AND detail = ?
-            ORDER BY timestamp DESC
-            LIMIT 1
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute(
+                """
+                SELECT name, detail, location_description, x, y, z FROM objects
+                WHERE LOWER(name) = LOWER(?) AND LOWER(detail) LIKE LOWER(?)
+                ORDER BY timestamp DESC
+                LIMIT 1
             """,
-            (object_name, object_detail),
-        )
-        row = cursor.fetchone()
-        if row:
-            name, detail, location_description, x, y, z = row
-            return Object(name, detail, location_description, (x, y, z))
-        return None
-    
-    def find_object_in_memory(self, object_name: str, object_detail: str) -> Optional[Object]:
-        """
-        Retrieve the most recent object matching the name and detail from memory, in a flexible manner.
-
-        Arguments:
-            object_name (str): The name of the object.
-            object_detail (str): The detail/description of the object.
-
-        Returns:
-            Optional[Object]: The found object or None if not found.
-        """
-        cursor = self.conn.cursor()
-        cursor.execute(
-            """
-            SELECT name, detail, location_description, x, y, z FROM objects
-            ORDER BY timestamp DESC
-            """
-        )
-        
-        rows = cursor.fetchall()
-
-        language_processor = LanguageProcessor()
-        for row in rows:
-            name, detail, location_description, x, y, z = row
-            same_object = language_processor.are_the_same_object(object_name, object_detail, name, detail)
-            if same_object:
+                (object_name, f"%{object_detail}%"),
+            )
+            row = cursor.fetchone()
+            if row:
+                name, detail, location_description, x, y, z = row
+                logging.info(f"Found object '{name}' in past memory.")
                 return Object(name, detail, location_description, (x, y, z))
-        return None
-
-    def delete_object_from_memory(self, object_name: str, object_detail: str) -> bool:
-        """
-        Delete an object (regardless of timestamp) from the memory database based on its name and detail.
-
-        Arguments:
-            object_name (str): The name of the object to delete.
-            object_detail (str): The detail of the object to delete.
-
-        Returns:
-            bool: True if an object was deleted, false otherwise.
-        """
-        cursor = self.conn.cursor()
-        cursor.execute(
-            """
-            DELETE FROM objects
-            WHERE name = ? AND detail = ?
-            """,
-            (object_name, object_detail),
-        )
-        self.conn.commit()
-        rows_affected = cursor.rowcount
-        cursor.close()
-        return rows_affected > 0
+            logging.info(f"No matching object found in past memory for '{object_name}'.")
+            return None
+        except sqlite3.Error as e:
+            logging.error(f"Failed to retrieve object from memory: {e}")
+            raise
 
     def close(self):
         """
         Close the database connection.
         """
-        if self.conn:
+        try:
             self.conn.close()
+            logging.info("Closed the database connection.")
+        except sqlite3.Error as e:
+            logging.error(f"Failed to close database connection: {e}")
 
     def __del__(self):
         """
         Ensure the database connection is closed when the memory instance is destroyed.
         """
         self.close()
-
-"""
-if __name__ == "__main__":
-    memory = Memory()
-
-    test_object = Object(
-        name="trash can",
-        detail="dark gray",
-        location_description="I do not know",
-        location_3d_coords=(1, 2, 3)
-    )
-
-    # memory.save_object_to_memory(test_object)
-
-    # memory.delete_object_from_memory("trash can", "dark gray")
-
-    get_object = memory.find_object_in_memory("garbage can", "dark gray")
-
-    if get_object:
-        print(f"Found Object: {get_object.name}, {get_object.detail}, {get_object.location_description}, {get_object.location_3d_coords}")
-    else:
-        print("Object not found in memory.")
-
-    memory.close()
-"""

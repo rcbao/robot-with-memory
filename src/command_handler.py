@@ -151,11 +151,18 @@ class CommandHandler:
         Returns:
             str: Feedback message.
         """
+        print("running:: handle_fetch")
         obj = self.find_object(object_name, detail)
         if obj and obj.location_3d_coords:
-            success = self.movement.grasp_object(obj.location_3d_coords)
+            # Unpack the 3D coordinates tuple into separate variables
+            x0, y0, z0 = obj.location_3d_coords
+            print("got location_3d_coords")
+            print(obj.location_3d_coords)
+            print("self.movement.fetch_object")
+            success = self.movement.fetch_object(x0, y0, z0)
             if success:
-                self.movement.go_to(destination)
+                # Use 'navigate_to' instead of 'go_to' as per movement.py
+                self.movement.navigate_to(destination)
                 self.movement.release_object()
                 return f"I have fetched the {obj.name} and delivered it."
             return "I found the object but couldn't grasp it."
