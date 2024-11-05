@@ -137,9 +137,8 @@ class CommandHandler:
         """
         obj = self.memory.find_object_from_past_memory(name, detail)
 
-        description = self.format_object_location_desc(obj)
-
         if obj:
+            description = self.format_object_location_desc(obj)
             response = f"The {description}."
             return response
 
