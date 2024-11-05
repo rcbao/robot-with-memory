@@ -6,13 +6,15 @@ import numpy as np
 import logging
 import math
 import torch
+from mplib import Planner, Pose
 from scipy.spatial.transform import Rotation as R
-from motionplanner import FetchArmMotionPlanningSolver
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-MOCK_TARGET_LOCATION = (100, 100, 100)
+
+URDF_PATH = "data/fetch.urdf"
+MOVE_GROUP = "fetch_gripper"
 
 class MovementSystem:
     def __init__(self, simulator: ManiSkillSimulator):
@@ -23,25 +25,11 @@ class MovementSystem:
             simulator (ManiSkillSimulator): The robot simulator instance.
         """
         self.simulator = simulator
-        logging.info("MovementSystem initialized.")
-
-        self.DISABLE_ARM_MOVEMENT = True
-
-        # Initialize the motion planner
-        if self.DISABLE_ARM_MOVEMENT:
-            logging.info("DISABLE_ARM_MOVEMENT set to true. Not initializing planner.")
-        else:
-            self.motion_planner = FetchArmMotionPlanningSolver(
-                env=self.simulator.env,
-                # TODO: Implement this Arm motion planner using RRT
-            )
-            logging.info("FetchArmMotionPlanningSolver initialized.")
-
-        # Initialize base movement parameters
-        self.base_speed = 0.5  # meters per second
-        self.rotation_speed = 1.0  # radians per second
-
-
+        self.planner = Planner(
+            urdf=URDF_PATH,
+            move_group=MOVE_GROUP,
+            verbose=True
+        )
 
     def rotate_robot(self, angle_degrees: float, step_size: float = 0.1, tolerance: float = 0.01, max_steps: int = 100):
         """
@@ -98,172 +86,6 @@ class MovementSystem:
         action_vector = np.zeros(self.simulator.env.action_space.shape, dtype=np.float32)
         self.simulator.env.step(action_vector)
         logging.info("Rotation completed.")
-
-    def navigate_to(self, target_coords: Tuple[float, float, float]):
-        """
-        Navigate the robot's base to the target coordinates.
-
-        Args:
-            target_coords (Tuple[float, float, float]): Target (x, y, z) in meters.
-        """
-        logging.info(f"Navigating to coordinates: {target_coords}")
-        current_coords = self.find_current_location()
-        if not current_coords:
-            logging.error("Current location not found. Cannot navigate to target.")
-            return
-
-        delta_x = target_coords[0] - current_coords[0]
-        delta_y = target_coords[1] - current_coords[1]
-        delta_z = target_coords[2] - current_coords[2]
-        distance = math.sqrt(delta_x**2 + delta_y**2 + delta_z**2)
-        angle_to_target = math.atan2(delta_y, delta_x)
-        angle_diff = self.normalize_angle(angle_to_target - current_coords[3])  # Assuming current_theta is yaw
-
-        # Proportional controller gains
-        K_linear = 0.5
-        K_angular = 1.0
-
-        # Calculate velocities
-        linear_velocity = np.clip(K_linear * distance, -self.base_speed, self.base_speed)
-        angular_velocity = np.clip(K_angular * angle_diff, -self.rotation_speed, self.rotation_speed)
-
-        logging.info(f"Computed velocities - Linear: {linear_velocity:.2f}, Angular: {angular_velocity:.2f}")
-
-        # Create the action vector for base movement
-        action_vector = np.zeros(self.simulator.env.action_space.shape, dtype=np.float32)
-        # Assuming indices for linear and angular velocities; adjust based on actual action space
-        action_vector[-2] = linear_velocity  # Forward/backward
-        # action_vector[-1] = angular_velocity  # Rotation
-
-        # Execute the movement action
-        # TODO: fix this function
-        for _ in range(100):
-            obs, _, done, _, _ = self.simulator.env.step(action_vector)
-            if done:
-                break
-
-    def acquire_object(self, x0: float, y0: float, z0: float):
-        """
-        Move the robot to the specified coordinates and fetch the object located there.
-
-        Args:
-            x0 (float): Target x-coordinate in meters.
-            y0 (float): Target y-coordinate in meters.
-            z0 (float): Target z-coordinate in meters.
-        """
-        logging.info(f"Starting fetch operation for object at ({x0}, {y0}, {z0}).")
-
-        # Step 1: Navigate to the vicinity of the target coordinates
-        target_position = (x0, y0, z0)
-        if MOCK_TARGET_LOCATION:
-            target_position = MOCK_TARGET_LOCATION
-        self.navigate_to(target_position)
-        logging.info(f"Navigated to target position: {target_position}")
-
-        # Step 2: Lower the arm using the predefined action vector
-        arm_down_vector = np.array([1.0, 1.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]).reshape(1, 13)
-        logging.info("Lowering the arm to prepare for grasping.")
-        self.simulator.env.step(arm_down_vector)
-        logging.info("Arm lowered.")
-
-        # Step 3: Plan and execute the motion to grasp the object
-        if self.DISABLE_ARM_MOVEMENT:
-            logging.info("Arm movement disabled.")
-            logging.info("Fetch operation complete.")
-        else:
-            logging.info("Planning motion to grasp the object.")
-            target_grasp_pose = self.calculate_grasp_pose(x0, y0, z0)
-            result = self.motion_planner.move_to_pose_with_RRTConnect(pose=target_grasp_pose)
-
-            if result == -1:
-                logging.error("Motion planning to grasp pose failed.")
-                return
-
-            logging.info("Motion planning and execution to grasp pose succeeded.")
-
-            # Step 4: Close the gripper to grasp the object
-            logging.info("Closing the gripper to grasp the object.")
-            success = self.grasp_object(gripper_position=1.0)  # Correct usage
-            if not success:
-                logging.error("Gripper failed to close properly.")
-                return
-            logging.info("Gripper closed.")
-
-            # Step 5: Lift the arm back to a safe position
-            arm_up_vector = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.0, 0]).reshape(1, 13)
-            logging.info("Lifting the arm with the object.")
-            self.simulator.env.step(arm_up_vector)
-            logging.info("Arm lifted.")
-
-    def calculate_grasp_pose(self, x0: float, y0: float, z0: float) -> 'sapien.Pose':
-        """
-        Calculate the target grasp pose based on the object's coordinates.
-
-        Args:
-            x0 (float): Object's x-coordinate in meters.
-            y0 (float): Object's y-coordinate in meters.
-            z0 (float): Object's z-coordinate in meters.
-
-        Returns:
-            sapien.Pose: The calculated grasp pose.
-        """
-        # Define the desired grasp position slightly above the object
-        grasp_position = np.array([x0, y0, z0 + 0.1])  # 10 cm above the object
-        # Define the desired orientation (e.g., facing downward)
-        grasp_orientation = R.from_euler('xyz', [0, math.pi, 0]).as_quat()
-        grasp_pose = sapien.Pose(p=grasp_position, q=grasp_orientation)
-        logging.debug(f"Calculated grasp pose: Position={grasp_position}, Orientation={grasp_orientation}")
-        return grasp_pose
-
-    def grasp_object(self, gripper_position: float = 1.0) -> bool:
-        """
-        Perform a grasp action by setting the gripper position.
-
-        Args:
-            gripper_position (float): Desired gripper position (0.0 for open, 1.0 for closed).
-
-        Returns:
-            bool: True if grasping was successful, False otherwise.
-        """
-        print("grasp_object::")
-        print("gripper_position::")
-        print(gripper_position)
-        if not isinstance(gripper_position, (float, int)):
-            logging.error(f"gripper_position must be a float or int, got {type(gripper_position)}")
-            return False
-        logging.info(f"Grasping object with gripper position: {gripper_position}")
-        return self._set_gripper(gripper_position)
-
-    def release_object(self, gripper_position: float = 0.0):
-        """
-        Perform a release action by setting the gripper position.
-
-        Args:
-            gripper_position (float): Desired gripper position (0.0 for open, 1.0 for closed).
-        """
-        logging.info(f"Releasing object with gripper position: {gripper_position}")
-        self._set_gripper(gripper_position)
-
-    def _set_gripper(self, position: float) -> bool:
-        """
-        Helper method to set the gripper position.
-
-        Args:
-            position (float): Desired gripper position.
-
-        Returns:
-            bool: True if action executed, False otherwise.
-        """
-        try:
-            action_vector = np.zeros(self.simulator.env.action_space.shape, dtype=np.float32)
-            gripper_index = 12  # Update based on actual action space index for Fetch's gripper
-            action_vector[gripper_index] = position
-            self.simulator.env.step(action_vector)
-            logging.info("Gripper action executed.")
-            return True  # Placeholder for actual verification
-        except Exception as e:
-            logging.error(f"Failed to set gripper position: {e}")
-            return False
 
     def find_current_location(self) -> Optional[Tuple[float, float, float, float]]:
         """
@@ -336,3 +158,64 @@ class MovementSystem:
 
         logging.info("Moved the arm down to clear the head camera's view.")
         return obs
+
+    def navigate_to(self, target_coords: Tuple[float, float, float]):
+        # Define the target pose
+        target_position = np.array(target_coords)
+        target_orientation = np.array([1, 0, 0, 0])  # Identity quaternion (w, x, y, z)
+        target_pose = Pose(position=target_position, orientation=target_orientation)
+
+        # Get the current joint positions
+        current_qpos = self.planner.robot.get_qpos()
+
+        # Plan the path
+        result = self.planner.plan_pose(
+            goal_pose=target_pose,
+            current_qpos=current_qpos,
+            time_step=1 / 250,
+            verbose=True
+        )
+
+        if result['status'] == 'Success':
+            # Execute the planned path
+            self.execute_trajectory(result['position'], result['time'])
+            return True
+        else:
+            print(f"Planning failed with status: {result['status']}")
+            return False
+
+    def execute_trajectory(self, positions, times):
+        # Implement the method to send the trajectory to the robot's control system
+        pass
+
+    def acquire_object(self, x0: float, y0: float, z0: float):
+        """
+        Move the robot to the specified coordinates and fetch the object located there.
+
+        Args:
+            x0 (float): Target x-coordinate in meters.
+            y0 (float): Target y-coordinate in meters.
+            z0 (float): Target z-coordinate in meters.
+        """
+        pass
+
+    def grasp_object(self, gripper_position: float = 1.0) -> bool:
+        """
+        Perform a grasp action by setting the gripper position.
+
+        Args:
+            gripper_position (float): Desired gripper position (0.0 for open, 1.0 for closed).
+
+        Returns:
+            bool: True if grasping was successful, False otherwise.
+        """
+        pass
+
+    def release_object(self, gripper_position: float = 0.0):
+        """
+        Perform a release action by setting the gripper position.
+
+        Args:
+            gripper_position (float): Desired gripper position (0.0 for open, 1.0 for closed).
+        """
+        pass
