@@ -7,3 +7,5 @@ models/yolov8*.pt
 videos/*.mp4
 memory.db
 *.png
+haosulab_AI2THOR/*
+hfdownloader
