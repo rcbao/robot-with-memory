@@ -1,25 +1,17 @@
 import os
 from pathlib import Path
-from typing import Any, Dict, Union, List
-import datetime
+from typing import Union, List
 import numpy as np
-import sapien
-import torch
-from PIL import Image
 from transforms3d.euler import euler2quat
-
+import sapien
 import gymnasium as gym
 from mani_skill.utils.wrappers import RecordEpisode
 from mani_skill.agents.robots import Fetch, Panda
-from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.envs.tasks.tabletop.pick_cube import PickCubeEnv
-from mani_skill.utils import sapien_utils
 from mani_skill.utils.building import actors
 from mani_skill.utils.registration import register_env
 from mani_skill.utils.scene_builder.table import TableSceneBuilder
-from mani_skill.utils.scene_builder.replicacad.scene_builder import ReplicaCADSceneBuilder
-from mani_skill.utils.structs.pose import Pose
-from mani_skill.utils.structs.types import SimConfig
+from camera_utils import StepImageCaptureWrapper  
 
 OUTPUT_DIR = "exp-4/videos"
 USING_HQ_CAMERA = True
@@ -37,46 +29,6 @@ CAMERA_CONFIG_DEFAULT = {
     "viewer_camera_configs": {"fov": 1},
     "enable_shadow": True,
 }
-
-
-def save_camera_image_by_type(env, camera_type="base_camera"):
-    obs = env.get_obs()
-    if 'sensor_data' in obs:
-        rgb_image = obs['sensor_data'][camera_type]['rgb'].squeeze(0).cpu().numpy()
-        Image.fromarray(rgb_image).save(f"sensor_image-{camera_type}-{datetime.datetime.now():%Y%m%d-%H%M%S}.png")
-
-
-def get_camera_image(env) -> np.ndarray:
-    obs = env.get_obs()
-    print("obs::")
-    print(obs)
-    print("=====")
-    if 'sensor_data' in obs:
-        save_camera_image_by_type(env, "base_camera")
-    else:
-        raise KeyError("Camera observation not found in the environment observations.")
-
-
-class StepImageCaptureWrapper(gym.Wrapper):
-    def __init__(self, env, capture_frequency=5):
-        super().__init__(env)
-        self.capture_frequency = capture_frequency
-        self.step_count = 0
-
-    def step(self, action):
-        obs, reward, terminated, truncated, info = self.env.step(action)
-        self.step_count += 1
-
-        # Capture image every `capture_frequency` steps
-        if self.step_count % self.capture_frequency == 0:
-            get_camera_image(self.env)
-
-        return obs, reward, terminated, truncated, info
-
-    def reset(self, **kwargs):
-        self.step_count = 0
-        return self.env.reset(**kwargs)
-
 
 def add_object_to_scene(
     table_scene,
@@ -137,6 +89,6 @@ def init_env():
         viewer_camera_configs=config["viewer_camera_configs"],
         enable_shadow=config["enable_shadow"]
     )
-    env = StepImageCaptureWrapper(env, capture_frequency=25)
+    env = StepImageCaptureWrapper(env, capture_frequency=25, camera_type="base_camera")
     env = RecordEpisode(env, output_dir=OUTPUT_DIR, save_trajectory=False, save_video=True, video_fps=30, max_steps_per_video=800)
     return env
