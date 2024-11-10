@@ -39,7 +39,7 @@ CAMERA_CONFIG_DEFAULT = {
 }
 
 
-def save_camera_image_by_type(env, camera_type="hand_camera"):
+def save_camera_image_by_type(env, camera_type="base_camera"):
     obs = env.get_obs()
     if 'sensor_data' in obs:
         rgb_image = obs['sensor_data'][camera_type]['rgb'].squeeze(0).cpu().numpy()
@@ -48,10 +48,34 @@ def save_camera_image_by_type(env, camera_type="hand_camera"):
 
 def get_camera_image(env) -> np.ndarray:
     obs = env.get_obs()
+    print("obs::")
+    print(obs)
+    print("=====")
     if 'sensor_data' in obs:
-        save_camera_image_by_type("hand_camera")
+        save_camera_image_by_type(env, "base_camera")
     else:
         raise KeyError("Camera observation not found in the environment observations.")
+
+
+class StepImageCaptureWrapper(gym.Wrapper):
+    def __init__(self, env, capture_frequency=5):
+        super().__init__(env)
+        self.capture_frequency = capture_frequency
+        self.step_count = 0
+
+    def step(self, action):
+        obs, reward, terminated, truncated, info = self.env.step(action)
+        self.step_count += 1
+
+        # Capture image every `capture_frequency` steps
+        if self.step_count % self.capture_frequency == 0:
+            get_camera_image(self.env)
+
+        return obs, reward, terminated, truncated, info
+
+    def reset(self, **kwargs):
+        self.step_count = 0
+        return self.env.reset(**kwargs)
 
 
 def add_object_to_scene(
@@ -74,7 +98,7 @@ def add_object_to_scene(
 class PickAppleEnv(PickCubeEnv):
     cube_half_size = 0.02
     goal_thresh = 0.025
-    SUPPORTED_ROBOTS = ["panda", "fetch"]
+    SUPPORTED_ROBOTS = ["panda", "fetch", "panda_wristcam"]
 
     def __init__(self, *args, robot_uids="panda_wristcam", robot_init_qpos_noise=0.02, **kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
@@ -104,14 +128,15 @@ def init_env():
 
     env = gym.make(
         "PickApple-v1",
-        obs_mode="none",
-        control_mode="pd_joint_pos",
         render_mode="rgb_array",
+        obs_mode="rgbd",
+        control_mode="pd_joint_pos",
         reward_mode="sparse",
         sensor_configs=config["sensor_configs"],
         human_render_camera_configs=config["human_render_camera_configs"],
         viewer_camera_configs=config["viewer_camera_configs"],
         enable_shadow=config["enable_shadow"]
     )
+    env = StepImageCaptureWrapper(env, capture_frequency=25)
     env = RecordEpisode(env, output_dir=OUTPUT_DIR, save_trajectory=False, save_video=True, video_fps=30, max_steps_per_video=800)
     return env
