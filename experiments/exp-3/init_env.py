@@ -25,27 +25,54 @@ from transforms3d.euler import euler2quat
 
 from mani_skill.envs.tasks.tabletop.pick_cube import PickCubeEnv
 
-OUTPUT_DIR = "exp-2/videos"
+OUTPUT_DIR = "exp-3/videos"
+
+CAMERA_CONFIGS_HIGH_QUALITY = {
+    "sensor_configs": dict(width=1920, height=1088, shader_pack="rt-fast"),
+    "human_render_camera_configs":dict(width=1088, height=1088, shader_pack="rt-fast"),
+    "viewer_camera_configs": dict(fov=1),
+    "enable_shadow": True
+}
+
+CAMERA_CONFIG_DEFAULT = {
+    "sensor_configs": dict(width=640, height=480, shader_pack="default"),
+    "human_render_camera_configs":dict(width=640, height=480, shader_pack="default"),
+    "viewer_camera_configs": dict(fov=1),
+    "enable_shadow": True
+}
+
+USING_HQ_CAMERA = True
 
 
-# def add_apple(table_scene):
-#     # add apple
-#     scale = 1.0
-#     builder = table_scene.scene.create_actor_builder()
-#     model_dir = "exp-2/assets"
-#     apple_model_file = str(f"{model_dir}/Apple_28.glb")
+def save_camera_image_by_type(env, camera_type: str = "hand_camera"):
+    obs = env.get_obs()
+    sensor_data = obs['sensor_data']
 
-#     apple_pose = sapien.Pose(
-#         p=[0.2, 0.2, 0.2], 
-#         q=euler2quat(np.pi / 2, 0, np.pi)
-#     )
-#     builder.add_nonconvex_collision_from_file(
-#         filename=apple_model_file, pose=apple_pose, scale=[scale] * 3
-#     )
-#     builder.add_visual_from_file(
-#         filename=apple_model_file, scale=[scale] * 3, pose=apple_pose
-#     )
-#     table = builder.build_static(name="apple-28")
+    if 'sensor_data' in obs:
+        sensor_data = obs['sensor_data']
+        camera_image = sensor_data[camera_type]['rgb']  
+        rgb_image = camera_image.squeeze(0).cpu().numpy() 
+        image = Image.fromarray(rgb_image)
+
+        timestamp = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
+
+        image.save(f'sensor_image-{camera_type}-{timestamp}.png')
+
+def get_camera_image(env) -> np.ndarray:
+    """
+    Retrieve the current camera image from the simulator.
+    
+    Returns:
+        np.ndarray: The captured image in RGB format.
+    """
+    obs = env.get_obs()
+    if 'sensor_data' in obs:
+        sensor_data = obs['sensor_data']
+        camera_image = sensor_data["hand_camera"]['rgb']  
+        
+        save_camera_image_by_type("hand_camera")
+    else:
+        raise KeyError("Camera observation not found in the environment observations.")
 
 def add_object_to_scene(
     table_scene,
@@ -104,15 +131,6 @@ class PickAppleEnv(PickCubeEnv):
         )
         self.table_scene.build()
 
-
-        # self.cube = actors.build_cube(
-        #     self.scene,
-        #     half_size=self.cube_half_size,
-        #     color=[1, 1, 1, 1],
-        #     name="cube",
-        #     # initial_pose=sapien.Pose(p=[0, 0, self.cube_half_size]),
-        # )
-
         self.goal_site = actors.build_sphere(
             self.scene,
             radius=self.goal_thresh,
@@ -140,12 +158,19 @@ class PickAppleEnv(PickCubeEnv):
 
 def init_env():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+    config = CAMERA_CONFIGS_HIGH_QUALITY if USING_HQ_CAMERA else CAMERA_CONFIG_DEFAULT
+
     env = gym.make(
         "PickApple-v1",
         obs_mode="none",
         control_mode="pd_joint_pos",
         render_mode="rgb_array",
         reward_mode="sparse",
+        sensor_configs=config["sensor_configs"],
+        human_render_camera_configs=config["human_render_camera_configs"],
+        viewer_camera_configs=config["viewer_camera_configs"],
+        enable_shadow=config["enable_shadow"]
     )
     env = RecordEpisode(
         env,
