@@ -7,22 +7,19 @@ import sapien
 import torch
 from PIL import Image
 from transforms3d.euler import euler2quat
-from mani_skill.sensors.camera import CameraConfig
-from mani_skill.envs.utils import randomization
 
 import gymnasium as gym
 from mani_skill.utils.wrappers import RecordEpisode
 from mani_skill.agents.robots import Fetch, Panda
 from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.envs.tasks.tabletop.pick_cube import PickCubeEnv
-from mani_skill.utils import sapien_utils, common
+from mani_skill.utils import sapien_utils
 from mani_skill.utils.building import actors
 from mani_skill.utils.registration import register_env
 from mani_skill.utils.scene_builder.table import TableSceneBuilder
 from mani_skill.utils.scene_builder.replicacad.scene_builder import ReplicaCADSceneBuilder
 from mani_skill.utils.structs.pose import Pose
 from mani_skill.utils.structs.types import SimConfig
-
 
 OUTPUT_DIR = "exp-5/videos"
 USING_HQ_CAMERA = True
@@ -97,22 +94,15 @@ def add_object_to_scene(
     return builder.build_static(name=name) if is_static else builder.build(name=name)
 
 
-@register_env("StackCube-v2", max_episode_steps=50)
+@register_env("StackCube-v1", max_episode_steps=50)
 class StackCubeEnv(BaseEnv):
 
     SUPPORTED_ROBOTS = ["panda_wristcam", "panda", "fetch"]
     agent: Union[Panda, Fetch]
 
     def __init__(
-        self,
-        *args,
-        num_cubes: int = 2,  # Added num_cubes parameter with default value 2
-        robot_uids="panda_wristcam",
-        robot_init_qpos_noise=0.02,
-        **kwargs
+        self, *args, robot_uids="panda_wristcam", robot_init_qpos_noise=0.02, **kwargs
     ):
-        assert num_cubes >= 2, "num_cubes must be at least 2 (one green and one red cube)"
-        self.num_cubes = num_cubes  # Store num_cubes
         self.robot_init_qpos_noise = robot_init_qpos_noise
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
 
@@ -127,109 +117,81 @@ class StackCubeEnv(BaseEnv):
         return CameraConfig("render_camera", pose, 512, 512, 1, 0.01, 100)
 
     def _load_agent(self, options: dict):
-        super()._load_agent(options)
+        super()._load_agent(options, sapien.Pose(p=[-0.615, 0, 0]))
 
     def _load_scene(self, options: dict):
-        self.cube_half_size = common.to_tensor([0.02] * 3)
+        self.cube_half_size = common.to_tensor([0.02] * 3, device=self.device)
         self.table_scene = TableSceneBuilder(
             env=self, robot_init_qpos_noise=self.robot_init_qpos_noise
         )
         self.table_scene.build()
-
-        self.cubes = []  # List to hold all cube actors
-
-        for i in range(self.num_cubes):
-            if i == 0:
-                color = [0, 1, 0, 1]  # First cube is green (base)
-                name = "base_cube"
-            elif i == 1:
-                color = [1, 0, 0, 1]  # Second cube is red (to be stacked)
-                name = "target_cube"
-            else:
-                # Assign random colors for additional cubes
-                color = list(np.random.choice(range(256), size=3) / 255) + [1]
-                name = f"cube_{i}"
-
-            cube = actors.build_cube(
-                self.scene,
-                half_size=0.02,
-                color=color,
-                name=name
-            )
-            self.cubes.append(cube)
+        self.cubeA = actors.build_cube(
+            self.scene,
+            half_size=0.02,
+            color=[1, 0, 0, 1],
+            name="cubeA",
+            initial_pose=sapien.Pose(p=[0, 0, 0.1]),
+        )
+        self.cubeB = actors.build_cube(
+            self.scene,
+            half_size=0.02,
+            color=[0, 1, 0, 1],
+            name="cubeB",
+            initial_pose=sapien.Pose(p=[1, 0, 0.1]),
+        )
 
     def _initialize_episode(self, env_idx: torch.Tensor, options: dict):
         with torch.device(self.device):
             b = len(env_idx)
             self.table_scene.initialize(env_idx)
 
-            # Sample positions ensuring no collision between cubes
-            positions = []
+            xyz = torch.zeros((b, 3))
+            xyz[:, 2] = 0.02
+            xy = torch.rand((b, 2)) * 0.2 - 0.1
+            region = [[-0.1, -0.2], [0.1, 0.2]]
             sampler = randomization.UniformPlacementSampler(
-                bounds=[[-0.1, -0.2], [0.1, 0.2]], batch_size=b
+                bounds=region, batch_size=b, device=self.device
             )
             radius = torch.linalg.norm(torch.tensor([0.02, 0.02])) + 0.001
-            for _ in range(self.num_cubes):
-                while True:
-                    xy = sampler.sample(radius, 100)
-                    # Check if the new position is sufficiently far from existing positions
-                    if all(
-                        torch.linalg.norm(xy - torch.tensor(pos[:2])) > (2 * self.cube_half_size[0] + 0.005)
-                        for pos in positions
-                    ):
-                        positions.append(xy.cpu().numpy())
-                        break
+            cubeA_xy = xy + sampler.sample(radius, 100)
+            cubeB_xy = xy + sampler.sample(radius, 100, verbose=False)
 
-            for i, cube in enumerate(self.cubes):
-                xyz = torch.zeros((b, 3))
-                xyz[:, 2] = self.cube_half_size[2]  # Place on the table
+            xyz[:, :2] = cubeA_xy
+            qs = randomization.random_quaternions(
+                b,
+                lock_x=True,
+                lock_y=True,
+                lock_z=False,
+            )
+            self.cubeA.set_pose(Pose.create_from_pq(p=xyz.clone(), q=qs))
 
-                xyz[:, :2] = torch.tensor(positions[i]).to(self.device)
-
-                if i == 1:
-                    # Red cube: allow rotation around z-axis only
-                    qs = randomization.random_quaternions(
-                        b,
-                        lock_x=True,
-                        lock_y=True,
-                        lock_z=False,
-                    )
-                else:
-                    # Other cubes: full random rotation
-                    qs = randomization.random_quaternions(b)
-
-                cube.set_pose(Pose.create_from_pq(xyz.clone(), qs))
+            xyz[:, :2] = cubeB_xy
+            qs = randomization.random_quaternions(
+                b,
+                lock_x=True,
+                lock_y=True,
+                lock_z=False,
+            )
+            self.cubeB.set_pose(Pose.create_from_pq(p=xyz, q=qs))
 
     def evaluate(self):
-        # Identify the green and red cubes
-        base_cube = self.cubes[0]
-        target_cube = self.cubes[1]
-
-        pos_base = base_cube.pose.p
-        pos_target = target_cube.pose.p
-        offset = pos_target - pos_base
-
-        # Check if the target cube is on top of the base cube within half cube size
+        pos_A = self.cubeA.pose.p
+        pos_B = self.cubeB.pose.p
+        offset = pos_A - pos_B
         xy_flag = (
             torch.linalg.norm(offset[..., :2], axis=1)
             <= torch.linalg.norm(self.cube_half_size[:2]) + 0.005
         )
-        z_flag = torch.abs(offset[..., 2] - self.cube_half_size[2] * 2) <= 0.005
-        is_target_on_base = torch.logical_and(xy_flag, z_flag)
-
-        # Check if the target cube is static
-        is_target_static = target_cube.is_static(lin_thresh=1e-2, ang_thresh=0.5)
-
-        # Check if the target cube is not being grasped
-        is_target_grasped = self.agent.is_grasping(target_cube)
-
-        # Success condition
-        success = is_target_on_base * is_target_static * (~is_target_grasped)
-
+        z_flag = torch.abs(offset[..., 2] - self.cube_half_size[..., 2] * 2) <= 0.005
+        is_cubeA_on_cubeB = torch.logical_and(xy_flag, z_flag)
+        # NOTE (stao): GPU sim can be fast but unstable. Angular velocity is rather high despite it not really rotating
+        is_cubeA_static = self.cubeA.is_static(lin_thresh=1e-2, ang_thresh=0.5)
+        is_cubeA_grasped = self.agent.is_grasping(self.cubeA)
+        success = is_cubeA_on_cubeB * is_cubeA_static * (~is_cubeA_grasped)
         return {
-            "is_target_grasped": is_target_grasped,
-            "is_target_on_base": is_target_on_base,
-            "is_target_static": is_target_static,
+            "is_cubeA_grasped": is_cubeA_grasped,
+            "is_cubeA_on_cubeB": is_cubeA_on_cubeB,
+            "is_cubeA_static": is_cubeA_static,
             "success": success.bool(),
         }
 
@@ -237,44 +199,47 @@ class StackCubeEnv(BaseEnv):
         obs = dict(tcp_pose=self.agent.tcp.pose.raw_pose)
         if "state" in self.obs_mode:
             obs.update(
-                tcp_to_cubes_pos=[cube.pose.p - self.agent.tcp.pose.p for cube in self.cubes],
-                cubes_pose=[cube.pose.raw_pose for cube in self.cubes],
+                cubeA_pose=self.cubeA.pose.raw_pose,
+                cubeB_pose=self.cubeB.pose.raw_pose,
+                tcp_to_cubeA_pos=self.cubeA.pose.p - self.agent.tcp.pose.p,
+                tcp_to_cubeB_pos=self.cubeB.pose.p - self.agent.tcp.pose.p,
+                cubeA_to_cubeB_pos=self.cubeB.pose.p - self.cubeA.pose.p,
             )
         return obs
 
     def compute_dense_reward(self, obs: Any, action: torch.Tensor, info: Dict):
-        # Reaching reward for the target cube
+        # reaching reward
         tcp_pose = self.agent.tcp.pose.p
-        target_cube_pos = self.cubes[1].pose.p
-        target_to_tcp_dist = torch.linalg.norm(tcp_pose - target_cube_pos, axis=1)
-        reward = 2 * (1 - torch.tanh(5 * target_to_tcp_dist))
+        cubeA_pos = self.cubeA.pose.p
+        cubeA_to_tcp_dist = torch.linalg.norm(tcp_pose - cubeA_pos, axis=1)
+        reward = 2 * (1 - torch.tanh(5 * cubeA_to_tcp_dist))
 
-        # Grasp and place reward
-        target_cube_pos = self.cubes[1].pose.p
-        base_cube_pos = self.cubes[0].pose.p
+        # grasp and place reward
+        cubeA_pos = self.cubeA.pose.p
+        cubeB_pos = self.cubeB.pose.p
         goal_xyz = torch.hstack(
-            [base_cube_pos[:, 0:2], (base_cube_pos[:, 2] + self.cube_half_size[2] * 2)[:, None]]
+            [cubeB_pos[:, 0:2], (cubeB_pos[:, 2] + self.cube_half_size[2] * 2)[:, None]]
         )
-        target_to_goal_dist = torch.linalg.norm(goal_xyz - target_cube_pos, axis=1)
-        place_reward = 1 - torch.tanh(5.0 * target_to_goal_dist)
+        cubeA_to_goal_dist = torch.linalg.norm(goal_xyz - cubeA_pos, axis=1)
+        place_reward = 1 - torch.tanh(5.0 * cubeA_to_goal_dist)
 
-        reward[info["is_target_grasped"]] = (4 + place_reward)[info["is_target_grasped"]]
+        reward[info["is_cubeA_grasped"]] = (4 + place_reward)[info["is_cubeA_grasped"]]
 
-        # Ungrasp and static reward
+        # ungrasp and static reward
         gripper_width = (self.agent.robot.get_qlimits()[0, -1, 1] * 2).to(
             self.device
         )  # NOTE: hard-coded with panda
-        is_target_grasped = info["is_target_grasped"]
+        is_cubeA_grasped = info["is_cubeA_grasped"]
         ungrasp_reward = (
             torch.sum(self.agent.robot.get_qpos()[:, -2:], axis=1) / gripper_width
         )
-        ungrasp_reward[~is_target_grasped] = 1.0
-        v = torch.linalg.norm(self.cubes[1].linear_velocity, axis=1)
-        av = torch.linalg.norm(self.cubes[1].angular_velocity, axis=1)
+        ungrasp_reward[~is_cubeA_grasped] = 1.0
+        v = torch.linalg.norm(self.cubeA.linear_velocity, axis=1)
+        av = torch.linalg.norm(self.cubeA.angular_velocity, axis=1)
         static_reward = 1 - torch.tanh(v * 10 + av)
-        reward[info["is_target_on_base"]] = (
+        reward[info["is_cubeA_on_cubeB"]] = (
             6 + (ungrasp_reward + static_reward) / 2.0
-        )[info["is_target_on_base"]]
+        )[info["is_cubeA_on_cubeB"]]
 
         reward[info["success"]] = 8
 
@@ -286,15 +251,13 @@ class StackCubeEnv(BaseEnv):
         return self.compute_dense_reward(obs=obs, action=action, info=info) / 8
 
 
-
 def init_env():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     config = CAMERA_CONFIGS_HIGH_QUALITY if USING_HQ_CAMERA else CAMERA_CONFIG_DEFAULT
 
     env = gym.make(
         # "PickApple-v1",
-        "StackCube-v2",
-        num_cubes=3,
+        "StackCube-v1",
         render_mode="rgb_array",
         obs_mode="rgbd",
         control_mode="pd_joint_pos",
