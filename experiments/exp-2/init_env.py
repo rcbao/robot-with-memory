@@ -126,6 +126,23 @@ class PickAppleEnv(PickCubeEnv):
             is_static=False
         )
 
+        self.cubeB = add_object_to_scene(
+            table_scene=self.table_scene,
+            model_file="exp-2/assets/Lettuce_10.glb.glb",
+            # position=[0.5, 0.5, 0.5],
+            orientation_euler=[np.pi / 2, 0, np.pi],
+            scale=0.4,
+            name="bread-20",
+            is_static=False
+        )
+        # actors.build_cube(
+        #     self.scene,
+        #     half_size=0.02,
+        #     color=[0, 1, 0, 1],
+        #     name="cubeB",
+        #     initial_pose=sapien.Pose(p=[1, 0, 0.1]),
+        # )
+
 
 
 

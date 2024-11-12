@@ -14,7 +14,7 @@ from mani_skill.utils.scene_builder.table import TableSceneBuilder
 from camera_utils import StepImageCaptureWrapper  
 
 OUTPUT_DIR = "exp-4/videos"
-USING_HQ_CAMERA = True
+USING_HQ_CAMERA = False
 
 CAMERA_CONFIGS_HIGH_QUALITY = {
     "sensor_configs": {"width": 1920, "height": 1088, "shader_pack": "rt-fast"},
@@ -30,6 +30,8 @@ CAMERA_CONFIG_DEFAULT = {
     "enable_shadow": True,
 }
 
+FIX_ROTATION_POSE = [np.pi / 2, 0, 0]
+
 def add_object_to_scene(
     table_scene,
     model_file: Union[str, Path],
@@ -39,15 +41,31 @@ def add_object_to_scene(
     name: str = "object",
     is_static: bool = False,
 ):
+    filename = str(Path(model_file))
+
     pose = sapien.Pose(p=position, q=euler2quat(*orientation_euler))
     builder = table_scene.scene.create_actor_builder()
-    builder.add_nonconvex_collision_from_file(filename=str(Path(model_file)), pose=pose, scale=[scale] * 3)
-    builder.add_visual_from_file(filename=str(Path(model_file)), pose=pose, scale=[scale] * 3)
-    return builder.build_static(name=name) if is_static else builder.build(name=name)
+
+    cube_material = sapien.pysapien.physx.PhysxMaterial(
+            static_friction=1, dynamic_friction=1, restitution=0
+        )
+    builder.add_nonconvex_collision_from_file(
+            filename=filename, 
+            pose=pose, 
+            scale=[scale] * 3,
+            material=cube_material
+        )
+    builder.add_visual_from_file(filename=filename, pose=pose, scale=[scale] * 3)
+    
+    if is_static:
+        return builder.build_static(name=name)
+
+    actor = builder.build(name=name)
+    return actor
 
 
 @register_env("PickApple-v1", max_episode_steps=50)
-class PickAppleEnv(PickCubeEnv):
+class PickAppleEnv(StackCubeEnv):
     cube_half_size = 0.02
     goal_thresh = 0.025
     SUPPORTED_ROBOTS = ["panda", "fetch", "panda_wristcam"]
@@ -66,13 +84,38 @@ class PickAppleEnv(PickCubeEnv):
         self._hidden_objects.append(self.goal_site)
         self.cube = add_object_to_scene(
             table_scene=self.table_scene,
-            model_file="exp-2/assets/Cup_10.glb",
-            orientation_euler=[np.pi / 2, 0, np.pi],
+            model_file="exp-4/assets/Cup_8.glb",
+            orientation_euler=FIX_ROTATION_POSE,
             scale=0.4,
-            name="bread-20",
-            is_static=False,
+            name="Cup_8"
         )
 
+        objs = self.table_scene.scene.actors
+        print("objs::")
+        print(objs)
+        print(objs["Cup_8"])
+
+        objs["Cup_8"].set_pose(sapien.Pose(p=np.array([0.4, 0.4, -0.05])))
+
+
+
+        self.cubeB = add_object_to_scene(
+            table_scene=self.table_scene,
+            model_file="exp-4/assets/Cup_2.glb",
+            position=[0.2, 0, 0.2],
+            orientation_euler=FIX_ROTATION_POSE,
+            scale=0.4,
+            name="Cup_2"
+        )
+
+        self.cubeC = add_object_to_scene(
+            table_scene=self.table_scene,
+            model_file="exp-4/assets/Cup_3.glb",
+            position=[0, 0.2, 0.2],
+            orientation_euler=FIX_ROTATION_POSE,
+            scale=0.4,
+            name="Cup_3"
+        )
 
 def init_env():
     os.makedirs(OUTPUT_DIR, exist_ok=True)

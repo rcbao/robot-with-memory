@@ -1,12 +1,19 @@
 import numpy as np
 import sapien
-
+import time
 from mani_skill.envs.tasks import PickCubeEnv
 from mani_skill.examples.motionplanning.panda.motionplanner import \
     PandaArmMotionPlanningSolver
 from mani_skill.examples.motionplanning.panda.utils import (
     compute_grasp_info_by_obb, get_actor_obb)
 from init_env import init_env
+
+def start_with_delay(env, delay_seconds=20):
+    env.reset()
+    start_time = time.time()
+    while time.time() - start_time < delay_seconds:
+        env.step(np.array([0] * 8))  # No-action step, robot stays still
+        env.render()
 
 def solve(env: PickCubeEnv, seed=None, debug=False, vis=False):
     env.reset(seed=seed)
@@ -63,6 +70,8 @@ def solve(env: PickCubeEnv, seed=None, debug=False, vis=False):
 
 def main():
     env = init_env()
+    # start_with_delay(env)
+    # print("===")
     res = solve(env, vis=False)
     print(res[-1])
     env.close()
