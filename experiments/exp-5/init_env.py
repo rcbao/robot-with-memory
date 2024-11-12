@@ -34,8 +34,8 @@ CAMERA_CONFIGS_HIGH_QUALITY = {
 }
 
 CAMERA_CONFIG_DEFAULT = {
-    "sensor_configs": {"width": 640, "height": 480, "shader_pack": "default"},
-    "human_render_camera_configs": {"width": 640, "height": 480, "shader_pack": "default"},
+    "sensor_configs": {"width": 1920, "height": 1088, "shader_pack": "default"},
+    "human_render_camera_configs": {"width": 1088, "height": 1088, "shader_pack": "default"},
     "viewer_camera_configs": {"fov": 1},
     "enable_shadow": True,
 }
@@ -50,9 +50,6 @@ def save_camera_image_by_type(env, camera_type="base_camera"):
 
 def get_camera_image(env) -> np.ndarray:
     obs = env.get_obs()
-    print("obs::")
-    print(obs)
-    print("=====")
     if 'sensor_data' in obs:
         save_camera_image_by_type(env, "base_camera")
     else:
@@ -164,8 +161,8 @@ class StackCubeEnv(BaseEnv):
 
             xyz = torch.zeros((b, 3))
             xyz[:, 2] = 0.02
-            xy = torch.rand((b, 2)) * 0.2 - 0.1
-            region = [[-0.1, -0.2], [0.1, 0.2]]
+            xy = (torch.rand((b, 2)) * 0.2 - 0.1) * 0.3
+            region = [[-0.2, -0.3], [0.2, 0.3]]
             sampler = randomization.UniformPlacementSampler(
                 bounds=region, batch_size=b
             )
@@ -234,9 +231,8 @@ def init_env():
     config = CAMERA_CONFIGS_HIGH_QUALITY if USING_HQ_CAMERA else CAMERA_CONFIG_DEFAULT
 
     env = gym.make(
-        # "PickApple-v1",
         "StackCube-v2",
-        num_cubes=5,
+        num_cubes=7,
         render_mode="rgb_array",
         obs_mode="rgbd",
         control_mode="pd_joint_pos",
