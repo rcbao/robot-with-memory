@@ -236,7 +236,7 @@ def init_env():
     env = gym.make(
         # "PickApple-v1",
         "StackCube-v2",
-        num_cubes=3,
+        num_cubes=5,
         render_mode="rgb_array",
         obs_mode="rgbd",
         control_mode="pd_joint_pos",
