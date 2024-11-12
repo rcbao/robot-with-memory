@@ -66,6 +66,10 @@ def solve(env: StackCubeEnv, seed=None, debug=False, vis=False):
             print("Fail to find a valid grasp pose for cube", i)
             return False
 
+        # small lift
+        lift_pose = sapien.Pose([0, 0, 0.4]) * grasp_pose
+        planner.move_to_pose_with_screw(lift_pose)
+
         # Reach
         reach_pose = grasp_pose * sapien.Pose([0, 0, -0.05])
         planner.move_to_pose_with_screw(reach_pose)
@@ -75,7 +79,9 @@ def solve(env: StackCubeEnv, seed=None, debug=False, vis=False):
         planner.close_gripper()
 
         # Lift
-        lift_pose = sapien.Pose([0, 0, 0.1]) * grasp_pose
+        stack_increment = env.cube_half_size[2]
+        lift_height = 0.4 + i * stack_increment
+        lift_pose = sapien.Pose([0, 0, lift_height]) * grasp_pose
         planner.move_to_pose_with_screw(lift_pose)
 
         # Stack
