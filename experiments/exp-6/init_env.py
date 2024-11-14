@@ -86,11 +86,16 @@ def add_object_to_scene(
     name: str = "object",
     is_static: bool = False,
 ):
+    model_file = Path(model_file)
+    if not model_file.exists():
+        raise FileNotFoundError(f"Model file '{model_file}' does not exist.")
     pose = sapien.Pose(p=position, q=euler2quat(*orientation_euler))
     builder = table_scene.scene.create_actor_builder()
-    builder.add_nonconvex_collision_from_file(filename=str(Path(model_file)), pose=pose, scale=[scale] * 3)
-    builder.add_visual_from_file(filename=str(Path(model_file)), pose=pose, scale=[scale] * 3)
+    builder.add_nonconvex_collision_from_file(str(model_file), pose, [scale] * 3)
+    builder.add_visual_from_file(str(model_file), pose, [scale] * 3)
     return builder.build_static(name=name) if is_static else builder.build(name=name)
+
+
 
 
 @register_env("StackCube-v2", max_episode_steps=50)
@@ -153,6 +158,37 @@ class StackCubeEnv(BaseEnv):
                 name=name
             )
             self.cubes.append(cube)
+
+        shelf_model_file = "exp-6/assets/RoboTHOR_shelving_unit_kallax_small_2_v.glb"
+        self.shelf_1 = add_object_to_scene(
+            table_scene=self.table_scene,
+            model_file=shelf_model_file,
+            position=[0, 0.5, 0],  
+            orientation_euler=[np.pi / 2, 0, np.pi],
+            scale=0.5,
+            name="shelf-1",
+            is_static=True
+        )
+
+        self.shelf_1 = add_object_to_scene(
+            table_scene=self.table_scene,
+            model_file=shelf_model_file,
+            position=[0, 0.5, 0],  
+            orientation_euler=[np.pi / 2, 0, np.pi],
+            scale=0.5,
+            name="shelf-1",
+            is_static=True
+        )
+
+        self.shelf_2 = add_object_to_scene(
+            table_scene=self.table_scene,
+            model_file=shelf_model_file,
+            position=[0, -0.5, 0],  
+            orientation_euler=[np.pi / 2, 0, np.pi],
+            scale=0.5,
+            name="shelf-2",
+            is_static=True
+        )
 
     def _initialize_episode(self, env_idx: torch.Tensor, options: dict):
         with torch.device(self.device):
@@ -232,7 +268,7 @@ def init_env():
 
     env = gym.make(
         "StackCube-v2",
-        num_cubes=7,
+        num_cubes=2,
         render_mode="rgb_array",
         obs_mode="rgbd",
         control_mode="pd_joint_pos",
