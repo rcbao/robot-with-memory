@@ -87,15 +87,34 @@ def add_object_to_scene(
     is_static: bool = False,
 ):
     model_file = Path(model_file)
-    if not model_file.exists():
-        raise FileNotFoundError(f"Model file '{model_file}' does not exist.")
+
+
     pose = sapien.Pose(p=position, q=euler2quat(*orientation_euler))
     builder = table_scene.scene.create_actor_builder()
     builder.add_nonconvex_collision_from_file(str(model_file), pose, [scale] * 3)
     builder.add_visual_from_file(str(model_file), pose, [scale] * 3)
-    return builder.build_static(name=name) if is_static else builder.build(name=name)
+
+    if is_static:
+        return builder.build_static(name=name) 
+    return builder.build(name=name)
 
 
+def add_object_to_scene_v2(
+    table_scene,
+    model_id:str,
+    position: List[float] = [0, 0, 0],
+    orientation_euler: List[float] = [0, 0, 0],
+    scale: float = 1.0,
+    name: str = "object",
+    is_static: bool = False,
+):
+    builder = actors.get_actor_builder(
+        table_scene.scene,
+        id=f"ycb:{model_id}",
+    )
+    # choose a reasonable initial pose that doesn't intersect other objects
+    builder.inital_pose = sapien.Pose(p=position, q=euler2quat(*orientation_euler))
+    return builder.build(name=f"{model_id}-name")
 
 
 @register_env("StackCube-v2", max_episode_steps=50)
@@ -159,7 +178,13 @@ class StackCubeEnv(BaseEnv):
             )
             self.cubes.append(cube)
 
-        shelf_model_file = "exp-6/assets/RoboTHOR_shelving_unit_kallax_small_2_v.glb"
+        asset_dir = "exp-6/assets"
+
+        shelf_model_file = f"{asset_dir}/RoboTHOR_shelving_unit_kallax_small_2_v.glb"
+        bread_model_file = f"{asset_dir}/Bread_30.glb"
+        apple_model_file = f"{asset_dir}/Apple_28.glb"
+
+        ## Shelf 1 ##
         self.shelf_1 = add_object_to_scene(
             table_scene=self.table_scene,
             model_file=shelf_model_file,
@@ -170,15 +195,31 @@ class StackCubeEnv(BaseEnv):
             is_static=True
         )
 
-        self.shelf_1 = add_object_to_scene(
+        ## --------------- ##
+
+        ## Shelf 1 Objects ##
+
+        self.bread_1 = add_object_to_scene(
             table_scene=self.table_scene,
-            model_file=shelf_model_file,
-            position=[0, 0.5, 0],  
+            model_file=bread_model_file,
+            position=[-0.08, 0.5, 0.08],  
             orientation_euler=[np.pi / 2, 0, np.pi],
             scale=0.5,
-            name="shelf-1",
-            is_static=True
+            name="bread-1",
+            is_static=False
         )
+
+        self.apple_1 = add_object_to_scene(
+            table_scene=self.table_scene,
+            model_file=apple_model_file,
+            position=[0.08, 0.5, 0.08],  
+            orientation_euler=[np.pi / 2, 0, np.pi],
+            scale=0.5,
+            name="apple-1",
+            is_static=False
+        )
+
+        ## --------------- ##
 
         self.shelf_2 = add_object_to_scene(
             table_scene=self.table_scene,
@@ -188,6 +229,30 @@ class StackCubeEnv(BaseEnv):
             scale=0.5,
             name="shelf-2",
             is_static=True
+        )
+
+        ## --------------- ##
+
+        ## Shelf 2 Objects ##
+
+        self.bread_2 = add_object_to_scene_v2(
+            table_scene=self.table_scene,
+            model_id="005_tomato_soup_can",
+            position=[-0.08, -0.5, 0.07],
+            orientation_euler=[np.pi / 2, 0, np.pi],
+            scale=0.5,
+            name="bread-2",
+            is_static=False
+        )
+
+        self.apple_2 = add_object_to_scene(
+            table_scene=self.table_scene,
+            model_file=apple_model_file,
+            position=[0.08, -0.5, 0.05],
+            orientation_euler=[np.pi / 2, 0, np.pi],
+            scale=0.5,
+            name="apple-2",
+            is_static=False
         )
 
     def _initialize_episode(self, env_idx: torch.Tensor, options: dict):
