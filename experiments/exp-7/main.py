@@ -50,7 +50,7 @@ def main():
         if result:
             print(f"Successfully fetched '{object_name}' and placed it on the table.")
             # Update memory if needed
-            memory.update_location(name=object_name, new_location={"shelf": "table", "position": dest_coords})
+            memory.update_location(name=object_name, new_location={"location": "table", "position": dest_coords})
         else:
             print(f"Failed to fetch '{object_name}'.")
     
