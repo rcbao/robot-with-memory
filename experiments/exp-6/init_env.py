@@ -6,6 +6,9 @@ import numpy as np
 import sapien
 import torch
 from PIL import Image
+import uuid
+import base64
+
 from transforms3d.euler import euler2quat
 from mani_skill.envs.utils import randomization
 
@@ -39,6 +42,9 @@ CAMERA_CONFIG_DEFAULT = {
     "viewer_camera_configs": {"fov": 1},
     "enable_shadow": True,
 }
+
+def short_uuid():
+    return base64.urlsafe_b64encode(uuid.uuid4().bytes).decode('utf-8').rstrip("=")
 
 
 def save_camera_image_by_type(env, camera_type="base_camera"):
@@ -81,7 +87,7 @@ def add_object_to_scene(
     table_scene,
     model_file: Union[str, Path],
     position: List[float] = [0, 0, 0],
-    orientation_euler: List[float] = [0, 0, 0],
+    orientation_euler: List[float] = [np.pi / 2, 0, np.pi],
     scale: float = 1.0,
     name: str = "object",
     is_static: bool = False,
@@ -99,22 +105,21 @@ def add_object_to_scene(
     return builder.build(name=name)
 
 
-def add_object_to_scene_v2(
+def add_object_to_scene_ycb(
     table_scene,
     model_id:str,
     position: List[float] = [0, 0, 0],
     orientation_euler: List[float] = [0, 0, 0],
-    scale: float = 1.0,
-    name: str = "object",
-    is_static: bool = False,
 ):
     builder = actors.get_actor_builder(
         table_scene.scene,
         id=f"ycb:{model_id}",
     )
-    # choose a reasonable initial pose that doesn't intersect other objects
-    builder.inital_pose = sapien.Pose(p=position, q=euler2quat(*orientation_euler))
-    return builder.build(name=f"{model_id}-name")
+
+    builder.initial_pose = sapien.Pose(p=position, q=euler2quat(*orientation_euler))
+    short_id = short_uuid()
+
+    return builder.build(name=f"{model_id}-{short_id}")
 
 
 @register_env("StackCube-v2", max_episode_steps=50)
@@ -181,8 +186,6 @@ class StackCubeEnv(BaseEnv):
         asset_dir = "exp-6/assets"
 
         shelf_model_file = f"{asset_dir}/RoboTHOR_shelving_unit_kallax_small_2_v.glb"
-        bread_model_file = f"{asset_dir}/Bread_30.glb"
-        apple_model_file = f"{asset_dir}/Apple_28.glb"
 
         ## Shelf 1 ##
         self.shelf_1 = add_object_to_scene(
@@ -199,24 +202,16 @@ class StackCubeEnv(BaseEnv):
 
         ## Shelf 1 Objects ##
 
-        self.bread_1 = add_object_to_scene(
+        self.pear_1 = add_object_to_scene_ycb(
             table_scene=self.table_scene,
-            model_file=bread_model_file,
-            position=[-0.08, 0.5, 0.08],  
-            orientation_euler=[np.pi / 2, 0, np.pi],
-            scale=0.5,
-            name="bread-1",
-            is_static=False
+            model_id="016_pear",
+            position=[-0.08, 0.5, 0.08]
         )
 
-        self.apple_1 = add_object_to_scene(
+        self.apple_1 = add_object_to_scene_ycb(
             table_scene=self.table_scene,
-            model_file=apple_model_file,
-            position=[0.08, 0.5, 0.08],  
-            orientation_euler=[np.pi / 2, 0, np.pi],
-            scale=0.5,
-            name="apple-1",
-            is_static=False
+            model_id="013_apple",
+            position=[0.08, 0.5, 0.08]
         )
 
         ## --------------- ##
@@ -235,24 +230,16 @@ class StackCubeEnv(BaseEnv):
 
         ## Shelf 2 Objects ##
 
-        self.bread_2 = add_object_to_scene_v2(
+        self.tomato_soup = add_object_to_scene_ycb(
             table_scene=self.table_scene,
             model_id="005_tomato_soup_can",
-            position=[-0.08, -0.5, 0.07],
-            orientation_euler=[np.pi / 2, 0, np.pi],
-            scale=0.5,
-            name="bread-2",
-            is_static=False
+            position=[-0.08, -0.5, 0.07]
         )
 
-        self.apple_2 = add_object_to_scene(
+        self.banana = add_object_to_scene_ycb(
             table_scene=self.table_scene,
-            model_file=apple_model_file,
-            position=[0.08, -0.5, 0.05],
-            orientation_euler=[np.pi / 2, 0, np.pi],
-            scale=0.5,
-            name="apple-2",
-            is_static=False
+            model_id="011_banana",
+            position=[0.08, -0.5, 0.05]
         )
 
     def _initialize_episode(self, env_idx: torch.Tensor, options: dict):
