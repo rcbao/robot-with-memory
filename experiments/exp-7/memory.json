@@ -1,8 +1,19 @@
 {
+    "apple": {
+        "detail": "A red apple",
+        "location": {
+            "shelf": "left",
+            "position": [
+                0.08,
+                0.3,
+                0.22
+            ]
+        }
+    },
     "pear": {
         "detail": "A green pear",
         "location": {
-            "shelf": 1,
+            "shelf": "left",
             "position": [
                 -0.08,
                 0.3,
@@ -13,7 +24,7 @@
     "tomato_soup": {
         "detail": "A can of tomato soup",
         "location": {
-            "shelf": 2,
+            "shelf": "right",
             "position": [
                 -0.08,
                 -0.3,
@@ -24,11 +35,11 @@
     "banana": {
         "detail": "A yellow banana",
         "location": {
-            "shelf": "table",
+            "shelf": "right",
             "position": [
-                0.05,
-                0.05,
-                0
+                0.08,
+                -0.3,
+                0.22
             ]
         }
     }
