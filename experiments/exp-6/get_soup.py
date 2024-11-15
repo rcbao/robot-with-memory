@@ -21,7 +21,7 @@ def move_to_pose(planner, target_pose, dry_run=False):
         result = planner.move_to_pose_with_RRTConnect(target_pose, dry_run=dry_run)
     return result != -1
 
-def fetch_and_place_tomato_soup(env, debug=False, vis=False):
+def fetch_and_place_target_object(env, target_object, debug=False, vis=False):
     env.reset()
     planner = PandaArmMotionPlanningSolver(
         env,
@@ -35,11 +35,9 @@ def fetch_and_place_tomato_soup(env, debug=False, vis=False):
     env = env.unwrapped
     approaching = np.array([0, 0, -1])
 
-    # Fetch the tomato soup can object
-    tomato_soup_can = env.tomato_soup
-
+    # Fetch the target object
     # Compute the grasp pose
-    obb = get_actor_obb(tomato_soup_can)
+    obb = get_actor_obb(target_object)
     target_closing = env.agent.tcp.pose.to_transformation_matrix()[0, :3, 1].numpy()
     grasp_info = compute_grasp_info_by_obb(
         obb,
@@ -63,7 +61,7 @@ def fetch_and_place_tomato_soup(env, debug=False, vis=False):
         grasp_pose = grasp_pose2
         break
     else:
-        print("Failed to find a valid grasp pose for the tomato soup can.")
+        print("Failed to find a valid grasp pose for the target object.")
         return False
 
     # Reach, grasp, and initial lift
@@ -97,8 +95,9 @@ def fetch_and_place_tomato_soup(env, debug=False, vis=False):
 
 def main():
     env = init_env()  # Initialize the environment
+    target_object = env.banana
     try:
-        result = fetch_and_place_tomato_soup(env, vis=False)
+        result = fetch_and_place_target_object(env, target_object, vis=False)
         print("Operation result:", "Success" if result else "Failed")
     finally:
         env.close()
