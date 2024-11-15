@@ -14,7 +14,7 @@ from init_env import add_object_to_scene_ycb
 from mani_skill.utils.wrappers.record import RecordEpisode
 from init_env import init_env
 
-def move_to_pose(planner, target_pose, dry_run=False):
+def move_to_pose(planner, target_pose, dest_coords, dry_run=False):
     result = planner.move_to_pose_with_screw(target_pose, dry_run=dry_run)
     if result == -1:
         print("move_to_pose_with_screw failed, falling back to move_to_pose_with_RRTConnect")
@@ -80,7 +80,7 @@ def fetch_and_place_target_object(env, target_object, debug=False, vis=False):
     move_to_pose(planner, lift_pose)
     
     # Descend to place the object at the target location
-    final_destination_pose = sapien.Pose([0.05, 0.05, 0], lift_pose.q)  # Final target position
+    final_destination_pose = sapien.Pose(dest_coords, lift_pose.q)  # Final target position
     move_to_pose(planner, final_destination_pose)
     
     # Release the object
@@ -96,8 +96,9 @@ def fetch_and_place_target_object(env, target_object, debug=False, vis=False):
 def main():
     env = init_env()  # Initialize the environment
     target_object = env.banana
+    dest_coords = [0.05, 0.05, 0]
     try:
-        result = fetch_and_place_target_object(env, target_object, vis=False)
+        result = fetch_and_place_target_object(env, target_object, dest_coords, vis=False)
         print("Operation result:", "Success" if result else "Failed")
     finally:
         env.close()
