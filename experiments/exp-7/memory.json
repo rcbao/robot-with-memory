@@ -2,8 +2,8 @@
     "apple": {
         "detail": "A red apple",
         "location": {
-            "location": "left shelf",
-            "position": [
+            "text": "left shelf",
+            "coords": [
                 0.08,
                 0.3,
                 0.22
@@ -13,8 +13,8 @@
     "pear": {
         "detail": "A green pear",
         "location": {
-            "location": "left shelf",
-            "position": [
+            "text": "left shelf",
+            "coords": [
                 -0.08,
                 0.3,
                 0.22
@@ -24,8 +24,8 @@
     "tomato_soup": {
         "detail": "A can of tomato soup",
         "location": {
-            "location": "right shelf",
-            "position": [
+            "text": "right shelf",
+            "coords": [
                 -0.08,
                 -0.3,
                 0.24
@@ -35,8 +35,8 @@
     "banana": {
         "detail": "A yellow banana",
         "location": {
-            "location": "right shelf",
-            "position": [
+            "text": "right shelf",
+            "coords": [
                 0.08,
                 -0.3,
                 0.22

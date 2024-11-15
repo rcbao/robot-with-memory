@@ -61,22 +61,9 @@ class Memory:
 if __name__ == "__main__":
     mem = Memory()
 
-    # # Add an object
-    # mem.add_object(
-    #     name="apple",
-    #     detail="A red apple",
-    #     location={"shelf": 1, "position": [0.08, 0.3, 0.22]}
-    # )
-
-    # # Update object's location
-    # mem.update_location(
-    #     name="apple",
-    #     new_location={"shelf": 2, "position": [0.10, -0.25, 0.22]}
-    # )
-
     # Retrieve an object
-    apple = mem.get_object("banana")
-    print("Banana Details:", apple)
+    banana = mem.get_object("banana")
+    print("Banana Details:", banana)
 
     # List all objects
     all_objects = mem.list_objects()
