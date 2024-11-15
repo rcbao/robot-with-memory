@@ -74,7 +74,7 @@ def fetch_and_place_tomato_soup(env, debug=False, vis=False):
     
     # Adjusted initial lift after grasping the object
     # Calculate a dynamic and safe lift height
-    safe_lift_height = min(0.2, 0.5 - grasp_pose.p[2])  # Ensure lift stays within workspace bounds
+    safe_lift_height = min(0.1, 0.5 - grasp_pose.p[2])  # Ensure lift stays within workspace bounds
     lift_pose = sapien.Pose([0, 0, safe_lift_height]) * grasp_pose
 
     print("lift_pose::")
