@@ -71,28 +71,29 @@ def fetch_and_place_tomato_soup(env, debug=False, vis=False):
     move_to_pose(planner, reach_pose)
     move_to_pose(planner, grasp_pose)
     planner.close_gripper()
+    
+    # Adjusted initial lift after grasping the object
+    # Calculate a dynamic and safe lift height
+    safe_lift_height = min(0.2, 0.5 - grasp_pose.p[2])  # Ensure lift stays within workspace bounds
+    lift_pose = sapien.Pose([0, 0, safe_lift_height]) * grasp_pose
 
-    # Initial lift after grasping the object
-    lift_pose = sapien.Pose([0, 0, 0.2]) * grasp_pose
+    print("lift_pose::")
+    print(lift_pose)
     move_to_pose(planner, lift_pose)
-
-    # Move horizontally to be above the destination, then descend
-    above_destination_pose = sapien.Pose([0.2, 0, 0.4])
-    move_to_pose(planner, above_destination_pose)
-
+    
     # Descend to place the object at the target location
-    final_destination_pose = sapien.Pose([0.2, 0, 0])
+    final_destination_pose = sapien.Pose([0.05, 0.05, 0], lift_pose.q)  # Final target position
     move_to_pose(planner, final_destination_pose)
-
+    
     # Release the object
     planner.open_gripper()
-
-    # Small upward movement after release to clear the area
-    post_release_lift = sapien.Pose([0, 0, 0.1]) * final_destination_pose
-    move_to_pose(planner, post_release_lift)
-
+    
+    
     planner.close()
     return True
+
+
+
 
 def main():
     env = init_env()  # Initialize the environment

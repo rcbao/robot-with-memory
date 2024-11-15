@@ -233,7 +233,7 @@ class StackCubeEnv(BaseEnv):
         self.tomato_soup = add_object_to_scene_ycb(
             table_scene=self.table_scene,
             model_id="005_tomato_soup_can",
-            position=[0.04, -0.3, 0.24]    
+            position=[0, -0.3, 0.24]    
         )
 
         self.banana = add_object_to_scene_ycb(
