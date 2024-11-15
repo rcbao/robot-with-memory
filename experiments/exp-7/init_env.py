@@ -50,14 +50,14 @@ def short_uuid():
 
 
 def save_camera_image_by_type(env, camera_type="base_camera"):
-    obs = env.get_obs()
+    obs = env.unwrapped.get_obs()
     if 'sensor_data' in obs:
         rgb_image = obs['sensor_data'][camera_type]['rgb'].squeeze(0).cpu().numpy()
         Image.fromarray(rgb_image).save(f"sensor_image-{camera_type}-{datetime.datetime.now():%Y%m%d-%H%M%S}.png")
 
 
 def get_camera_image(env) -> np.ndarray:
-    obs = env.get_obs()
+    obs = env.unwrapped.get_obs()
     if 'sensor_data' in obs:
         save_camera_image_by_type(env, "base_camera")
     else:

@@ -75,8 +75,6 @@ def fetch_and_place_target_object(env, target_object, dest_coords, debug=False, 
     safe_lift_height = min(0.1, 0.5 - grasp_pose.p[2])  # Ensure lift stays within workspace bounds
     lift_pose = sapien.Pose([0, 0, safe_lift_height]) * grasp_pose
 
-    print("lift_pose::")
-    print(lift_pose)
     move_to_pose(planner, lift_pose)
     
     # Descend to place the object at the target location
@@ -95,7 +93,7 @@ def fetch_and_place_target_object(env, target_object, dest_coords, debug=False, 
 
 def main():
     env = init_env()  # Initialize the environment
-    target_object = env.banana
+    target_object = env.unwrapped.banana
     dest_coords = [0.05, 0.05, 0]
     try:
         result = fetch_and_place_target_object(env, target_object, dest_coords, vis=False)
