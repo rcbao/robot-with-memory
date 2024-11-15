@@ -26,7 +26,9 @@ from mani_skill.utils.structs.pose import Pose
 from mani_skill.utils.structs.types import SimConfig
 from mani_skill.sensors.camera import CameraConfig
 
-OUTPUT_DIR = "exp-6/videos"
+OUTPUT_DIR = "exp-7/videos"
+ASSET_DIR = "exp-7/assets"
+
 USING_HQ_CAMERA = True
 
 CAMERA_CONFIGS_HIGH_QUALITY = {
@@ -183,7 +185,7 @@ class StackCubeEnv(BaseEnv):
             )
             self.cubes.append(cube)
 
-        asset_dir = "exp-6/assets"
+        asset_dir = ASSET_DIR
 
         shelf_model_file = f"{asset_dir}/Shelving_Unit_215_1.glb"
 
