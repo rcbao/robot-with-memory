@@ -14,14 +14,14 @@ from init_env import add_object_to_scene_ycb
 from mani_skill.utils.wrappers.record import RecordEpisode
 from init_env import init_env
 
-def move_to_pose(planner, target_pose, dest_coords, dry_run=False):
+def move_to_pose(planner, target_pose, dry_run=False):
     result = planner.move_to_pose_with_screw(target_pose, dry_run=dry_run)
     if result == -1:
         print("move_to_pose_with_screw failed, falling back to move_to_pose_with_RRTConnect")
         result = planner.move_to_pose_with_RRTConnect(target_pose, dry_run=dry_run)
     return result != -1
 
-def fetch_and_place_target_object(env, target_object, debug=False, vis=False):
+def fetch_and_place_target_object(env, target_object, dest_coords, debug=False, vis=False):
     env.reset()
     planner = PandaArmMotionPlanningSolver(
         env,

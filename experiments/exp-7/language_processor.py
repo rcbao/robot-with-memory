@@ -3,10 +3,10 @@ import json
 from openai import OpenAI
 from typing import Tuple, Optional
 from dotenv import load_dotenv
-from .prompt_builder import PromptBuilder
+from prompt_builder import PromptBuilder
 
 load_dotenv()
-client = OpenAI()
+
 
 
 class LanguageProcessor:
@@ -14,6 +14,7 @@ class LanguageProcessor:
         """
         Initialize the LanguageProcessor with OpenAI API key.
         """
+        self.client = OpenAI()
         self.prompt_builder = PromptBuilder()
         self.api_key = os.getenv("OPENAI_API_KEY")
 

@@ -1,6 +1,6 @@
 import re
-from .file_handler import FileHandler
-from .constants import prompt_paths
+from file_handler import FileHandler
+from constants import prompt_paths
 
 
 class PromptBuilder:
