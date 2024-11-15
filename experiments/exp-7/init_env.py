@@ -124,7 +124,7 @@ def add_object_to_scene_ycb(
     return builder.build(name=f"{model_id}-{short_id}")
 
 
-@register_env("StackCube-v2", max_episode_steps=50)
+@register_env("StackCube-v2")
 class StackCubeEnv(BaseEnv):
 
     SUPPORTED_ROBOTS = ["panda_wristcam", "panda", "fetch"]

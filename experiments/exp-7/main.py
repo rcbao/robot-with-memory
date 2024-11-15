@@ -38,7 +38,7 @@ def main():
         dest_coords = [0.05, 0.05, 0]
         
         # Get target_object from environment
-        target_object = getattr(env, object_name, None)
+        target_object = getattr(env.unwrapped, object_name, None)
         if not target_object:
             print(f"Object '{object_name}' not found in the environment.")
             continue

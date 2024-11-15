@@ -45,7 +45,7 @@ class LanguageProcessor:
             )
 
             response_content = response.choices[0].message.content.strip()
-            print(f"[LLM Response]: {response_content}")
+            # print(f"[LLM Response]: {response_content}")
             return response_content
 
         except Exception as e:
