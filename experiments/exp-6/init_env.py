@@ -185,7 +185,7 @@ class StackCubeEnv(BaseEnv):
 
         asset_dir = "exp-6/assets"
 
-        shelf_model_file = f"{asset_dir}/RoboTHOR_shelving_unit_kallax_small_2_v.glb"
+        shelf_model_file = f"{asset_dir}/Shelving_Unit_215_1.glb"
 
         ## Shelf 1 ##
         self.shelf_1 = add_object_to_scene(
@@ -193,7 +193,7 @@ class StackCubeEnv(BaseEnv):
             model_file=shelf_model_file,
             position=[0, 0.5, 0],  
             orientation_euler=[np.pi / 2, 0, np.pi],
-            scale=0.5,
+            scale=0.25,
             name="shelf-1",
             is_static=True
         )
@@ -205,13 +205,13 @@ class StackCubeEnv(BaseEnv):
         self.pear_1 = add_object_to_scene_ycb(
             table_scene=self.table_scene,
             model_id="016_pear",
-            position=[-0.08, 0.5, 0.08]
+            position=[-0.08, 0.5, 0.36]
         )
 
         self.apple_1 = add_object_to_scene_ycb(
             table_scene=self.table_scene,
             model_id="013_apple",
-            position=[0.08, 0.5, 0.08]
+            position=[0.08, 0.5, 0.36]
         )
 
         ## --------------- ##
@@ -221,7 +221,7 @@ class StackCubeEnv(BaseEnv):
             model_file=shelf_model_file,
             position=[0, -0.5, 0],  
             orientation_euler=[np.pi / 2, 0, np.pi],
-            scale=0.5,
+            scale=0.25,
             name="shelf-2",
             is_static=True
         )
@@ -233,13 +233,13 @@ class StackCubeEnv(BaseEnv):
         self.tomato_soup = add_object_to_scene_ycb(
             table_scene=self.table_scene,
             model_id="005_tomato_soup_can",
-            position=[-0.08, -0.5, 0.07]
+            position=[-0.08, -0.5, 0.38]
         )
 
         self.banana = add_object_to_scene_ycb(
             table_scene=self.table_scene,
             model_id="011_banana",
-            position=[0.08, -0.5, 0.05]
+            position=[0.08, -0.5, 0.34]
         )
 
     def _initialize_episode(self, env_idx: torch.Tensor, options: dict):

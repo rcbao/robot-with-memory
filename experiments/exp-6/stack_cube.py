@@ -1,3 +1,4 @@
+## stack_cube.py ##
 import argparse
 import gymnasium as gym
 import numpy as np
@@ -109,9 +110,6 @@ def solve(env: StackCubeEnv, seed=None, debug=False, vis=False):
         # Small upward movement after releasing the cube
         post_release_lift = sapien.Pose([0, 0, 0.2]) * align_pose  # Move slightly up
         move_to_pose(planner, post_release_lift)
-
-
-
 
     planner.close()  # Close the planner after stacking all cubes
     return True
