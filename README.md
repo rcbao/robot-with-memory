@@ -19,7 +19,8 @@ pip install opencv-python
 * exp-4 -- exp-3 with multiple objects on the table. 
     TODOs: 
         Fix the roaming objects issue
-* exp-5 -- exp-4 with the robot able to pick up any object on-command
-* exp-6 -- exp-5 with the robot able to drop the selected object in designated place
-* exp-7 -- exp-6 with the robot able to (pick up + drop off) multiple objects on-command
+
+
+* exp-6 -- **Solved MOTION.**: Set up an env with two shelves and four YCB objects. Robot picks up any object from shelf
+* exp-7 -- exp-6 with the robot able to (pick up + drop off) any objects on-command
 * exp-8 -- exp-7 with the robot able to take in a recipe, identify objects to re-arrange, and execute
