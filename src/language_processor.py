@@ -87,11 +87,14 @@ class LanguageProcessor:
         Returns:
             str: The generated response.
         """
-        system_message = "You are a friendly and helpful assistant."
-        user_message = (
-            f"Generate a friendly and helpful response to the following message:\n\n"
-            f'"{context}"'
-        )
+        system_message = """    """
+        user_message = f"""
+        ## Context ##
+        {context}
+        -----
+        
+        Generate a friendly and helpful response to the following message
+        """
 
         messages = [
             {"role": "system", "content": system_message},

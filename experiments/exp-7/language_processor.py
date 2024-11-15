@@ -3,11 +3,10 @@ import json
 from openai import OpenAI
 from typing import Tuple, Optional
 from dotenv import load_dotenv
+from .prompt_builder import PromptBuilder
 
 load_dotenv()
-
 client = OpenAI()
-
 
 
 class LanguageProcessor:
@@ -15,6 +14,7 @@ class LanguageProcessor:
         """
         Initialize the LanguageProcessor with OpenAI API key.
         """
+        self.prompt_builder = PromptBuilder()
         self.api_key = os.getenv("OPENAI_API_KEY")
 
         if not self.api_key:
@@ -30,14 +30,10 @@ class LanguageProcessor:
         llm_response = llm_response.strip()
         return llm_response
 
-    def get_llm_response(self, system_message: str, user_message: str, max_tokens: int, temperature: float) -> str:
+    def get_llm_response(self, messages: list, max_tokens: int, temperature: float) -> str:
         """
         Interact with the GPT-4o model and return a response.
         """
-        messages = [
-            {"role": "system", "content": system_message},
-            {"role": "user", "content": user_message},
-        ]
 
         try:
             response = self.client.chat.completions.create(
@@ -55,23 +51,16 @@ class LanguageProcessor:
             print(f"Error generating response: {e}")
             return ""
 
-    def parse_user_input(self, user_input: str) -> Tuple[bool, Optional[str], Optional[str], Optional[str]]:
+    def parse_user_input(self, user_command: str) -> Tuple[bool, Optional[str], Optional[str], Optional[str]]:
         """
         Interpret the user prompt to extract action, object name, and details using LLM
         """
-        system_message = "You are a helpful assistant that parses user commands related to object memory and fetching."
-        user_message = (
-            f"Parse the following user command and extract the action, object name, and detail.\n\n"
-            f'Command: "{user_input}"\n\n'
-            f"Format the response as JSON with keys: relevancy (true/false), action, object_name, detail.\n"
-            f"If the command is not relevant to remembering, recalling, or fetching objects, set relevancy to false."
-        )
+        messages = self.prompt_builder.build_input_parser_messages(user_command)
 
         fallback_response = (False, None, None, None)
 
         response_content = self.get_llm_response(
-            system_message=system_message,
-            user_message=user_message,
+            messages=messages,
             max_tokens=150,
             temperature=0
         )
@@ -93,19 +82,3 @@ class LanguageProcessor:
         else:
             return fallback_response
 
-    def generate_response(self, context: str) -> str:
-        """
-        Generate a natural language response based on the given context using GPT-4.
-        """
-        system_message = "You are a friendly and helpful assistant."
-        user_message = (
-            f"Generate a friendly and helpful response to the following message:\n\n"
-            f'"{context}"'
-        )
-
-        return self.get_llm_response(
-            system_message=system_message,
-            user_message=user_message,
-            max_tokens=100,
-            temperature=0.7
-        )

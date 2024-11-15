@@ -1,0 +1,4 @@
+## User command ##
+{user_command}
+------
+Parse the above command into a JSON object
