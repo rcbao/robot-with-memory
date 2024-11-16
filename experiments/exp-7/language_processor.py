@@ -124,3 +124,7 @@ class LanguageProcessor:
         else:
             return None
 
+if __name__ == "__main__":
+    lang = LanguageProcessor()
+    output = lang.parse_user_input("what did we do so far?", [])
+    print(output)
