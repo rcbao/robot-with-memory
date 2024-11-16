@@ -27,11 +27,6 @@ from mani_skill.utils.structs.types import SimConfig
 from mani_skill.sensors.camera import CameraConfig
 
 
-from mani_skill import PACKAGE_ASSET_DIR
-from mani_skill.agents.registration import register_agent
-from mani_skill.utils import sapien_utils
-
-
 OUTPUT_DIR = "exp-7/videos"
 ASSET_DIR = "exp-7/assets"
 
@@ -65,56 +60,10 @@ def save_camera_image_by_type(env, camera_type="base_camera"):
 def get_camera_image(env) -> np.ndarray:
     obs = env.unwrapped.get_obs()
     if 'sensor_data' in obs:
-        camera_uids = [
-            # "front_camera-1",
-            # "wrist_camera-1",
-            "base_front_wide-1",
-            # "shoulder_view-1",
-            # "head_level-1",
-            # "hand_closeup-1",
-            # "overhead-1",
-            # "gripper_side-1"
-        ]
-
         save_camera_image_by_type(env, "base_camera")
-        for uid in camera_uids:
-            save_camera_image_by_type(env, uid)
+        save_camera_image_by_type(env, "base_front_wide-1")
     else:
         raise KeyError("Camera observation not found in the environment observations.")
-
-
-
-# @register_agent(override=True)
-@register_agent()
-class PandaWristCamOverride(PandaWristCam):
-    @property
-    def _sensor_configs(self):
-        return [
-            # CameraConfig(
-            #     uid="hand_camera",
-            #     pose=sapien.Pose(p=[0, 0, 0], q=[1, 0, 0, 0]),
-            #     width=128,
-            #     height=128,
-            #     fov=np.pi / 2,
-            #     near=0.01,
-            #     far=100,
-            #     mount=self.robot.links_map["camera_link"],
-            # )
-            CameraConfig(
-                uid="base_front_wide-1",
-                pose=sapien.Pose(
-                    p=[0.1, 0, 0.2],  # 10 cm forward, 20 cm above the base
-                    q=[1, 0, 0, 0]  # Pointing straight ahead
-                ),
-                width=640,
-                height=480,
-                fov=np.pi / 2, 
-                near=0.05,
-                far=200,
-                mount=self.robot.links_map["panda_link0"],
-            )
-        ]
-
 
 
 
@@ -181,7 +130,7 @@ def add_object_to_scene_ycb(
 @register_env("StackCube-v2")
 class StackCubeEnv(BaseEnv):
 
-    SUPPORTED_ROBOTS = ["panda_wristcam", "panda", "fetch"]
+    SUPPORTED_ROBOTS = ["panda", "fetch", "panda_wristcam"]
     agent: Union[Panda, Fetch]
 
     def __init__(
@@ -373,6 +322,7 @@ class StackCubeEnv(BaseEnv):
 def init_env():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     config = CAMERA_CONFIGS_HIGH_QUALITY if USING_HQ_CAMERA else CAMERA_CONFIG_DEFAULT
+
 
     env = gym.make(
         "StackCube-v2",
