@@ -14,7 +14,7 @@ from mani_skill.envs.utils import randomization
 
 import gymnasium as gym
 from mani_skill.utils.wrappers import RecordEpisode
-from mani_skill.agents.robots import Fetch, Panda
+from mani_skill.agents.robots import Fetch, Panda, PandaWristCam
 from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.envs.tasks.tabletop.pick_cube import PickCubeEnv
 from mani_skill.utils import common, sapien_utils
@@ -25,6 +25,12 @@ from mani_skill.utils.scene_builder.replicacad.scene_builder import ReplicaCADSc
 from mani_skill.utils.structs.pose import Pose
 from mani_skill.utils.structs.types import SimConfig
 from mani_skill.sensors.camera import CameraConfig
+
+
+from mani_skill import PACKAGE_ASSET_DIR
+from mani_skill.agents.registration import register_agent
+from mani_skill.utils import sapien_utils
+
 
 OUTPUT_DIR = "exp-7/videos"
 ASSET_DIR = "exp-7/assets"
@@ -53,15 +59,63 @@ def save_camera_image_by_type(env, camera_type="base_camera"):
     obs = env.unwrapped.get_obs()
     if 'sensor_data' in obs:
         rgb_image = obs['sensor_data'][camera_type]['rgb'].squeeze(0).cpu().numpy()
-        Image.fromarray(rgb_image).save(f"sensor_image-{camera_type}-{datetime.datetime.now():%Y%m%d-%H%M%S}.png")
+        Image.fromarray(rgb_image).save(f"sensor_image-{datetime.datetime.now():%Y%m%d-%H%M%S}-{camera_type}.png")
 
 
 def get_camera_image(env) -> np.ndarray:
     obs = env.unwrapped.get_obs()
     if 'sensor_data' in obs:
+        camera_uids = [
+            # "front_camera-1",
+            # "wrist_camera-1",
+            "base_front_wide-1",
+            # "shoulder_view-1",
+            # "head_level-1",
+            # "hand_closeup-1",
+            # "overhead-1",
+            # "gripper_side-1"
+        ]
+
         save_camera_image_by_type(env, "base_camera")
+        for uid in camera_uids:
+            save_camera_image_by_type(env, uid)
     else:
         raise KeyError("Camera observation not found in the environment observations.")
+
+
+
+# @register_agent(override=True)
+@register_agent()
+class PandaWristCamOverride(PandaWristCam):
+    @property
+    def _sensor_configs(self):
+        return [
+            # CameraConfig(
+            #     uid="hand_camera",
+            #     pose=sapien.Pose(p=[0, 0, 0], q=[1, 0, 0, 0]),
+            #     width=128,
+            #     height=128,
+            #     fov=np.pi / 2,
+            #     near=0.01,
+            #     far=100,
+            #     mount=self.robot.links_map["camera_link"],
+            # )
+            CameraConfig(
+                uid="base_front_wide-1",
+                pose=sapien.Pose(
+                    p=[0.1, 0, 0.2],  # 10 cm forward, 20 cm above the base
+                    q=[1, 0, 0, 0]  # Pointing straight ahead
+                ),
+                width=640,
+                height=480,
+                fov=np.pi / 2, 
+                near=0.05,
+                far=200,
+                mount=self.robot.links_map["panda_link0"],
+            )
+        ]
+
+
 
 
 class StepImageCaptureWrapper(gym.Wrapper):
