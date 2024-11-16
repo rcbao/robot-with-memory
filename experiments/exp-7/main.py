@@ -2,6 +2,9 @@ import json
 from language_processor import LanguageProcessor
 from memory import Memory
 from movement import fetch_and_place_target_object, init_env
+import warnings
+
+warnings.filterwarnings("ignore", category=UserWarning)
 
 
 def get_obj_description_from_memory(memory: Memory, object_name: str):
