@@ -50,9 +50,10 @@ def main():
     env = init_env()
     env.reset()
     message_history = []  # Initialize empty message history
-    
+    print("----------------------------------------")
     print("Welcome to the Robot Command Interface!")
     print("You can enter commands like 'Fetch the banana for me' or 'Where is the banana?'. Type 'exit' to quit.")
+    print("----------------------------------------")
     
     while True:
         user_input = input(">> ")
