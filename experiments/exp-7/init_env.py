@@ -204,13 +204,13 @@ class StackCubeEnv(BaseEnv):
 
         ## Shelf 1 Objects ##
 
-        self.pear_1 = add_object_to_scene_ycb(
+        self.pear = add_object_to_scene_ycb(
             table_scene=self.table_scene,
             model_id="016_pear",
             position=[-0.08, 0.3, 0.22]
         )
 
-        self.apple_1 = add_object_to_scene_ycb(
+        self.apple = add_object_to_scene_ycb(
             table_scene=self.table_scene,
             model_id="013_apple",
             position=[0.08, 0.3, 0.22]

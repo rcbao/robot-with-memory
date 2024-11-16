@@ -1,4 +1,10 @@
 ## User command ##
 {user_command}
 ------
-Parse the above command into a JSON object
+Your task is to parse the user's command into a JSON object. The JSON object should have the following keys:
+- `action` (string): the type of action. The value can be `fetch` or `recall`.
+- `object_name` (string): .
+- `detail` (string): the details of the object. This includes color, size, description of position, and so on.
+- `relevancy` (boolean): if the command is relevant. The value can be `true` or `false`.
+
+If the command is not relevant to fetching or observing, set `relevancy` to false. Output the JSON object below.

@@ -1,3 +1,5 @@
+# language_processor.py
+
 import os
 import json
 from openai import OpenAI
@@ -6,7 +8,6 @@ from dotenv import load_dotenv
 from prompt_builder import PromptBuilder
 
 load_dotenv()
-
 
 
 class LanguageProcessor:
@@ -52,11 +53,11 @@ class LanguageProcessor:
             print(f"Error generating response: {e}")
             return ""
 
-    def parse_user_input(self, user_command: str) -> Tuple[bool, Optional[str], Optional[str], Optional[str]]:
+    def parse_user_input(self, user_command: str, message_history: list) -> Tuple[bool, Optional[str], Optional[str], Optional[str]]:
         """
         Interpret the user prompt to extract action, object name, and details using LLM
         """
-        messages = self.prompt_builder.build_input_parser_messages(user_command)
+        messages = self.prompt_builder.build_input_parser_messages(user_command, message_history)
 
         fallback_response = (False, None, None, None)
 
@@ -82,4 +83,24 @@ class LanguageProcessor:
                 return fallback_response
         else:
             return fallback_response
+
+    def recall_object_info(self, user_question: str, obj_description: str, message_history: list = []) -> Optional[str]:
+        """
+        Given the user's question, use LLM to generate a response with object information.
+        """
+        # Build recall messages using PromptBuilder
+        messages = self.prompt_builder.build_recall_messages(user_question, obj_description, message_history)
+
+        response_content = self.get_llm_response(
+            messages=messages,
+            max_tokens=200,
+            temperature=0
+        )
+
+        if response_content:
+            # Optionally, clean up the response if needed
+            response_content = response_content.strip()
+            return response_content
+        else:
+            return None
 

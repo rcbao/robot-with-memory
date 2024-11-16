@@ -1,0 +1,9 @@
+Your task is to provide the user information about objects in a robot's environment based on the user's question.
+
+## User Command ##
+{user_command}
+
+## Object Details ##
+{object_details}
+
+Provide a clear and concise answer with the object's location and any relevant details.
