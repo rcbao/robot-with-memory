@@ -38,6 +38,7 @@ def main():
     memory = Memory()
     lang_processor = LanguageProcessor()
     env = init_env()
+    env.reset()
     message_history = []  # Initialize empty message history
     
     print("Welcome to the Robot Command Interface!")

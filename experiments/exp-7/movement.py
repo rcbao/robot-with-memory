@@ -22,7 +22,6 @@ def move_to_pose(planner, target_pose, dry_run=False):
     return result != -1
 
 def fetch_and_place_target_object(env, target_object, dest_coords, debug=False, vis=False):
-    env.reset()
     planner = PandaArmMotionPlanningSolver(
         env,
         debug=debug,
