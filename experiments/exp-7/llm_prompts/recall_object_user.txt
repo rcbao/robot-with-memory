@@ -1,9 +1,9 @@
-Your task is to provide the user information about objects in a robot's environment based on the user's question.
+Your task is to answer the user's question about objects in the simulation environment.
 
-## User Command ##
+## User Input ##
 {user_command}
 
-## Object Details ##
+## Object Details From Robot Memory ##
 {object_details}
 
-Provide a clear and concise answer with the object's location and any relevant details.
+Write a clear and concise text response based on the object's details from robot memory.
