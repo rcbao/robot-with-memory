@@ -1,3 +1,4 @@
+import json
 from language_processor import LanguageProcessor
 from memory import Memory
 from movement import fetch_and_place_target_object, init_env
