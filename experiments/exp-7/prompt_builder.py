@@ -26,6 +26,10 @@ class PromptBuilder:
 
         return recall_prompt
 
+    def build_generic_prompt(self, user_command: str) -> str:
+        prompt = f"""Please respond to the following user input: ''' {user_command} '''. Answer in a friendly manner."""
+        return prompt
+
     def build_initial_messages(self, user_prompt: str):
         messages = [
             {"role": "system", "content": self.system_prompt},
@@ -49,5 +53,10 @@ class PromptBuilder:
     
     def build_recall_messages(self, user_command: str, object_details: str, message_history: list = []):
         user_prompt = self.build_recall_prompt(user_command=user_command, object_details=object_details)
+        messages = self.build_messages(user_prompt, message_history)
+        return messages
+
+    def build_generic_messages(self, user_command: str, message_history: list = []):
+        user_prompt = self.build_generic_prompt(user_command)
         messages = self.build_messages(user_prompt, message_history)
         return messages

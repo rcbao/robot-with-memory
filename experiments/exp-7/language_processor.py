@@ -104,3 +104,23 @@ class LanguageProcessor:
         else:
             return None
 
+    def write_generic_response(self, user_question: str, message_history: list = []) -> Optional[str]:
+        """
+        Given the user's question, use LLM to generate a response with object information.
+        """
+        # Build recall messages using PromptBuilder
+        messages = self.prompt_builder.build_generic_messages(user_question, message_history)
+
+        response_content = self.get_llm_response(
+            messages=messages,
+            max_tokens=200,
+            temperature=0
+        )
+
+        if response_content:
+            # Optionally, clean up the response if needed
+            response_content = response_content.strip()
+            return response_content
+        else:
+            return None
+

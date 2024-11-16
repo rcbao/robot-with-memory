@@ -26,6 +26,12 @@ def handle_recall(memory: Memory, object_name: str, lang_processor: LanguageProc
     # Use LLM to provide an enhanced response
     user_question = f"Where is the {object_name}?"
     recall_response = lang_processor.recall_object_info(user_question, obj_description, message_history)
+
+    if recall_response.startswith("```json") and recall_response.endswith("```"):
+        recall_response = lang_processor.clean_up_json(recall_response)
+        parsed = json.loads(recall_response)
+        recall_response = parsed.get("detail")
+
     if recall_response:
         print(recall_response)
         message_history.append({"role": "assistant", "content": recall_response})
@@ -53,7 +59,7 @@ def main():
         # Parse user command
         relevancy, action, object_name, detail = lang_processor.parse_user_input(user_input, message_history)
         
-        if not relevancy or not action or not object_name:
+        if (not relevancy or not action) and not object_name:
             print("Sorry, I didn't understand that command.")
             continue
         
@@ -94,8 +100,16 @@ def main():
             # Handle recall command
             handle_recall(memory, object_name, lang_processor, message_history)
         
+        elif action.lower() == "generic":
+            generic_response = lang_processor.write_generic_response(user_input, message_history)
+            if not generic_response:
+                generic_response = "Sorry, I couldn't understand your request."
+
+            message_history.append({"role": "assistant", "content": generic_response})                
+            print(generic_response)
+        
         else:
-            print("Sorry, I can only handle 'fetch' and 'recall' commands at the moment.")
+            print("Sorry, I can only handle 'fetch', 'recall', and 'generic' commands at the moment.")
     
     env.close()
 
