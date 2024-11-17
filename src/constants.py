@@ -12,3 +12,22 @@ prompt_paths = {
 
 OPENAI_MODEL = "gpt-4o"
 OPENAI_MAX_TOKENS = 400
+
+OUTPUT_DIR = "videos"
+ASSET_DIR = "assets"
+
+USING_HQ_CAMERA = True
+
+CAMERA_CONFIGS_HIGH_QUALITY = {
+    "sensor_configs": {"width": 1920, "height": 1088, "shader_pack": "rt-fast"},
+    "human_render_camera_configs": {"width": 1088, "height": 1088, "shader_pack": "rt-fast"},
+    "viewer_camera_configs": {"fov": 1},
+    "enable_shadow": True,
+}
+
+CAMERA_CONFIG_DEFAULT = {
+    "sensor_configs": {"width": 1920, "height": 1088, "shader_pack": "default"},
+    "human_render_camera_configs": {"width": 1088, "height": 1088, "shader_pack": "default"},
+    "viewer_camera_configs": {"fov": 1},
+    "enable_shadow": True,
+}

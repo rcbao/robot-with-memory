@@ -1,11 +1,11 @@
 import os
 from pathlib import Path
 from typing import Any, Dict, Union, List
-import datetime
+
 import numpy as np
 import sapien
 import torch
-from PIL import Image
+
 import uuid
 import base64
 
@@ -26,66 +26,12 @@ from mani_skill.utils.structs.pose import Pose
 from mani_skill.utils.structs.types import SimConfig
 from mani_skill.sensors.camera import CameraConfig
 
+from constants import OUTPUT_DIR, ASSET_DIR, CAMERA_CONFIG_DEFAULT, CAMERA_CONFIGS_HIGH_QUALITY, USING_HQ_CAMERA
+from camera_utils import StepImageCaptureWrapper
 
-OUTPUT_DIR = "videos"
-ASSET_DIR = "assets"
-
-USING_HQ_CAMERA = True
-
-CAMERA_CONFIGS_HIGH_QUALITY = {
-    "sensor_configs": {"width": 1920, "height": 1088, "shader_pack": "rt-fast"},
-    "human_render_camera_configs": {"width": 1088, "height": 1088, "shader_pack": "rt-fast"},
-    "viewer_camera_configs": {"fov": 1},
-    "enable_shadow": True,
-}
-
-CAMERA_CONFIG_DEFAULT = {
-    "sensor_configs": {"width": 1920, "height": 1088, "shader_pack": "default"},
-    "human_render_camera_configs": {"width": 1088, "height": 1088, "shader_pack": "default"},
-    "viewer_camera_configs": {"fov": 1},
-    "enable_shadow": True,
-}
 
 def short_uuid():
     return base64.urlsafe_b64encode(uuid.uuid4().bytes).decode('utf-8').rstrip("=")
-
-
-def save_camera_image_by_type(env, camera_type="base_camera"):
-    obs = env.unwrapped.get_obs()
-    if 'sensor_data' in obs:
-        rgb_image = obs['sensor_data'][camera_type]['rgb'].squeeze(0).cpu().numpy()
-        Image.fromarray(rgb_image).save(f"sensor_image-{datetime.datetime.now():%Y%m%d-%H%M%S}-{camera_type}.png")
-
-
-def get_camera_image(env) -> np.ndarray:
-    obs = env.unwrapped.get_obs()
-    if 'sensor_data' in obs:
-        save_camera_image_by_type(env, "base_camera")
-        save_camera_image_by_type(env, "front_camera")
-    else:
-        raise KeyError("Camera observation not found in the environment observations.")
-
-
-
-class StepImageCaptureWrapper(gym.Wrapper):
-    def __init__(self, env, capture_frequency=5):
-        super().__init__(env)
-        self.capture_frequency = capture_frequency
-        self.step_count = 0
-
-    def step(self, action):
-        obs, reward, terminated, truncated, info = self.env.step(action)
-        self.step_count += 1
-
-        # Capture image every `capture_frequency` steps
-        if self.step_count % self.capture_frequency == 0:
-            get_camera_image(self.env)
-
-        return obs, reward, terminated, truncated, info
-
-    def reset(self, **kwargs):
-        self.step_count = 0
-        return self.env.reset(**kwargs)
 
 
 def add_object_to_scene(
@@ -98,8 +44,7 @@ def add_object_to_scene(
     is_static: bool = False,
 ):
     model_file = Path(model_file)
-
-
+    
     pose = sapien.Pose(p=position, q=euler2quat(*orientation_euler))
     builder = table_scene.scene.create_actor_builder()
     builder.add_nonconvex_collision_from_file(str(model_file), pose, [scale] * 3)
