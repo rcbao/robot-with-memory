@@ -4,15 +4,13 @@ import numpy as np
 import sapien
 from transforms3d.euler import euler2quat
 
-from mani_skill.envs.tasks import StackCubeEnv
 from mani_skill.examples.motionplanning.panda.motionplanner import PandaArmMotionPlanningSolver
 from mani_skill.examples.motionplanning.panda.utils import (
     compute_grasp_info_by_obb,
     get_actor_obb,
 )
-from init_env import add_object_to_scene_ycb
+from init_env import add_object_to_scene_ycb, init_env
 from mani_skill.utils.wrappers.record import RecordEpisode
-from init_env import init_env
 
 def move_to_pose(planner, target_pose, dry_run=False):
     result = planner.move_to_pose_with_screw(target_pose, dry_run=dry_run)
