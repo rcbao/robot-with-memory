@@ -56,14 +56,14 @@ class PandaWristCam(Panda):
         if USE_FRONT_CAMERA:
             return [
                 CameraConfig(
-                    uid="base_front_wide-1",
+                    uid="front_camera",
                     pose=sapien.Pose(
                         p=[0.1, 0, 0.2],  # 10 cm forward, 20 cm above the base
                         q=[1, 0, 0, 0]  # Pointing straight ahead
                     ),
                     width=640,
                     height=480,
-                    fov=np.pi / 2, 
+                    fov=np.pi / 4, 
                     near=0.05,
                     far=200,
                     mount=self.robot.links_map["panda_link0"],
