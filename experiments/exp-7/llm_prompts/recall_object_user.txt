@@ -1,9 +1,0 @@
-Your task is to answer the user's question about objects in the simulation environment.
-
-## User Input ##
-{user_command}
-
-## Object Details From Robot Memory ##
-{object_details}
-
-Write a clear and concise text response based on the object's details from robot memory.
