@@ -64,11 +64,11 @@ def main():
         # Parse user command
         relevancy, action, object_name, detail = lang_processor.parse_user_input(user_input, message_history)
         
-        if (not relevancy or not action) and not object_name:
+        if not action or not isinstance(action, str):
             print("Sorry, I didn't understand that command.")
             continue
         
-        if action.lower() == 'fetch':
+        if relevancy and object_name and action.lower() == 'fetch':
             # Get object location from memory
             obj = memory.get_object(object_name)
             if not obj:
@@ -101,21 +101,18 @@ def main():
             else:
                 print(f"Failed to fetch '{object_name}'.")
         
-        elif action.lower() == 'recall':
+        elif relevancy and object_name and action.lower() == 'recall':
             # Handle recall command
             handle_recall(memory, object_name, lang_processor, message_history)
         
-        elif action.lower() == "generic":
+        else:
             generic_response = lang_processor.write_generic_response(user_input, message_history)
             if not generic_response:
                 generic_response = "Sorry, I couldn't understand your request."
 
             message_history.append({"role": "assistant", "content": generic_response})                
             print(generic_response)
-        
-        else:
-            print("Sorry, I can only handle 'fetch', 'recall', and 'generic' commands at the moment.")
-    
+
     env.close()
 
 if __name__ == "__main__":
