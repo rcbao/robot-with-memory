@@ -27,8 +27,8 @@ from mani_skill.utils.structs.types import SimConfig
 from mani_skill.sensors.camera import CameraConfig
 
 
-OUTPUT_DIR = "videos"
-ASSET_DIR = "assets"
+OUTPUT_DIR = "../videos"
+ASSET_DIR = "../assets"
 
 USING_HQ_CAMERA = True
 
