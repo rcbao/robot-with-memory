@@ -8,28 +8,28 @@ def generate_memory_json(file_path="memory.json"):
             "detail": "A red apple",
             "location": {
                 "text": "left shelf",
-                "coords": [0.08, 0.3, 0.22]
+                "coords": [-0.24, 0.345, 0.22]
             }
         },
         "pear": {
             "detail": "A green pear",
             "location": {
                 "text": "left shelf",
-                "coords": [-0.08, 0.3, 0.22]
+                "coords": [-0.40, 0.345, 0.22]
             }
         },
         "tomato_soup": {
             "detail": "A can of tomato soup",
             "location": {
                 "text": "right shelf",
-                "coords": [-0.08, -0.3, 0.24]
+                "coords": [-0.40, -0.345, 0.24]
             }
         },
         "banana": {
             "detail": "A yellow banana",
             "location": {
                 "text": "right shelf",
-                "coords": [0.08, -0.3, 0.22]
+                "coords": [-0.24, -0.345, 0.22]
             }
         }
     }

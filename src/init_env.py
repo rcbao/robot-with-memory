@@ -83,12 +83,12 @@ class MemoryRobotEnv(BaseEnv):
 
     @property
     def _default_sensor_configs(self):
-        pose = sapien_utils.look_at(eye=[0.3, 0, 0.6], target=[-0.1, 0, 0.1])
+        pose = sapien_utils.look_at(eye=[0.345, 0, 0.6], target=[-0.1, 0, 0.1])
         return [CameraConfig("base_camera", pose, 128, 128, np.pi / 2, 0.01, 100)]
 
     @property
     def _default_human_render_camera_configs(self):
-        pose = sapien_utils.look_at([0.6, 0.7, 0.6], [0.0, 0.0, 0.35])
+        pose = sapien_utils.look_at([0.6, 0.7, 0.6], [0.0, 0.0, 0.3455])
         return CameraConfig("render_camera", pose, 512, 512, 1, 0.01, 100)
 
     def _load_agent(self, options: dict):
@@ -108,7 +108,7 @@ class MemoryRobotEnv(BaseEnv):
         self.shelf_1 = add_object_to_scene(
             table_scene=self.table_scene,
             model_file=shelf_model_file,
-            position=[0, 0.3, 0],  
+            position=[-0.32, 0.345, 0],  
             orientation_euler=[np.pi / 2, 0, np.pi],
             scale=0.15,
             name="shelf-1",
@@ -122,13 +122,13 @@ class MemoryRobotEnv(BaseEnv):
         self.pear = add_object_to_scene_ycb(
             table_scene=self.table_scene,
             model_id="016_pear",
-            position=[-0.08, 0.3, 0.22]
+            position=[-0.40, 0.345, 0.22]
         )
 
         self.apple = add_object_to_scene_ycb(
             table_scene=self.table_scene,
             model_id="013_apple",
-            position=[0.08, 0.3, 0.22]
+            position=[-0.24, 0.345, 0.22]
         )
 
         ## --------------- ##
@@ -136,7 +136,7 @@ class MemoryRobotEnv(BaseEnv):
         self.shelf_2 = add_object_to_scene(
             table_scene=self.table_scene,
             model_file=shelf_model_file,
-            position=[0, -0.3, 0],  
+            position=[-0.32, -0.345, 0],  
             orientation_euler=[np.pi / 2, 0, np.pi],
             scale=0.15,
             name="shelf-2",
@@ -150,13 +150,13 @@ class MemoryRobotEnv(BaseEnv):
         self.tomato_soup = add_object_to_scene_ycb(
             table_scene=self.table_scene,
             model_id="005_tomato_soup_can",
-            position=[-0.08, -0.3, 0.24]    
+            position=[-0.40, -0.345, 0.24]    
         )
 
         self.banana = add_object_to_scene_ycb(
             table_scene=self.table_scene,
             model_id="011_banana",
-            position=[0.08, -0.3, 0.22]
+            position=[-0.24, -0.345, 0.22]
         )
 
     def _initialize_episode(self, env_idx: torch.Tensor, options: dict):
