@@ -16,7 +16,7 @@ def get_camera_image(env) -> np.ndarray:
     if 'sensor_data' in obs:
         save_camera_image_by_type(env, "base_camera")
         # save_camera_image_by_type(env, "front_camera")
-        save_camera_image_by_type(env, "front_camera_link2")
+        save_camera_image_by_type(env, "front_camera")
 
     else:
         raise KeyError("Camera observation not found in the environment observations.")
