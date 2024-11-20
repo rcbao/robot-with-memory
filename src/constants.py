@@ -19,7 +19,7 @@ ASSET_DIR = "assets"
 USING_HQ_CAMERA = True
 
 CAMERA_CONFIGS_HIGH_QUALITY = {
-    "sensor_configs": {"width": 1920, "height": 1088, "shader_pack": "rt-fast"},
+    "sensor_configs": {"width": 1088, "height": 1088, "shader_pack": "rt-fast"},
     "human_render_camera_configs": {"width": 1088, "height": 1088, "shader_pack": "rt-fast"},
     "viewer_camera_configs": {"fov": 1},
     "enable_shadow": True,

@@ -35,11 +35,11 @@
     "banana": {
         "detail": "A yellow banana",
         "location": {
-            "text": "on the table",
+            "text": "right shelf",
             "coords": [
-                0.05,
-                0.05,
-                0
+                -0.24,
+                -0.345,
+                0.22
             ]
         }
     }
