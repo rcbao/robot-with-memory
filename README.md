@@ -1,34 +1,32 @@
-# memory-bot
-Robot with memory. Project for Learning for Interact Robots
+# Memory-Bot: Robot with Memory
+**Project for Learning Interactive Robots**
 
-## Set up
-```
-module load anaconda
+---
 
-conda activate maniskill_env  ## Use your maniskill conda environment name
+## Setup
 
-pip install openai
-pip install opencv-python
-```
+1. Load Anaconda:
+   ```bash
+   module load anaconda
+   ```
+2. Activate your Maniskill environment:
+   ```bash
+   conda activate maniskill_env  # Replace "maniskill_env" with your environment name
+   ```
+3. Install required packages:
+   ```bash
+   pip install openai
+   pip install opencv-python
+   ```
 
-## experiments
+---
 
-* exp-1 -- original example `https://github.com/haosulab/ManiSkill/blob/main/mani_skill/examples/motionplanning/panda/solutions/pick_cube.py`
-* exp-2 -- exp-1 with cup.glb added to the environment. The robot can pick up the cup
-* exp-3 -- exp-2 with pandas robot swapped to pandas-wrist cam. Code saves wrist cam footage to image
-* exp-4 -- exp-3 with multiple objects on the table. 
-    TODOs: 
-        Fix the roaming objects issue
+## Workaround for Panda Wrist Camera Issue
 
+To fix the bug preventing agents from being overridden, update the following file:
+**`~/.conda/envs/maniskill_env/lib/python3.1/site-packages/mani_skill/agents/robots/panda/panda_wristcam.py`**
 
-* exp-6 -- **Solved MOTION.**: Set up an env with two shelves and four YCB objects. Robot picks up any object from shelf
-* exp-7 -- exp-6 with the robot able to (pick up + drop off) any objects on-command
-* exp-8 -- exp-7 with the robot able to take in a recipe, identify objects to re-arrange, and execute
-
-
-## Work around
-For `~/.conda/envs/maniskill_env/lib/python3.1/site-packages/mani_skill/agents/robots/panda/panda_wristcam.py`
-Use the below instead: 
+Replace its contents with this code:
 
 ```python
 import numpy as np
@@ -43,10 +41,9 @@ from .panda import Panda
 
 USE_FRONT_CAMERA = True
 
-
 @register_agent()
 class PandaWristCam(Panda):
-    """Panda arm robot with the real sense camera attached to gripper"""
+    """Panda arm robot with the RealSense camera attached to the gripper."""
 
     uid = "panda_wristcam"
     urdf_path = f"{PACKAGE_ASSET_DIR}/robots/panda/panda_v3.urdf"
@@ -55,19 +52,20 @@ class PandaWristCam(Panda):
     def _sensor_configs(self):
         if USE_FRONT_CAMERA:
             return [
+                # Camera mounted on panda_link2
                 CameraConfig(
                     uid="front_camera",
                     pose=sapien.Pose(
-                        p=[0.1, 0, 0.2],  # 10 cm forward, 20 cm above the base
-                        q=[1, 0, 0, 0]  # Pointing straight ahead
+                        p=[0.0, 0.0, 0.15],  # Positioned 15 cm above panda_link2
+                        q=[0.7071, 0.7071, 0, 0],  # Facing straight ahead
                     ),
                     width=640,
                     height=480,
-                    fov=np.pi / 4, 
+                    fov=np.pi / 2,  # 90-degree field of view
                     near=0.05,
                     far=200,
-                    mount=self.robot.links_map["panda_link0"],
-                )
+                    mount=self.robot.links_map["panda_link2"],
+                ),
             ]
         return [
             CameraConfig(
@@ -83,4 +81,6 @@ class PandaWristCam(Panda):
         ]
 ```
 
-There's a bug with Maniskill preventing overriding agents. this fixes it using a feature flag.
+### Explanation
+- **`USE_FRONT_CAMERA` Flag**: Enables using the front camera mounted on `panda_link2`.
+- **Bug Fix**: Adjusts the sensor configuration to avoid overriding issues.
