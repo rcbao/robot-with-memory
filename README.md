@@ -41,9 +41,10 @@ from .panda import Panda
 
 USE_FRONT_CAMERA = True
 
+
 @register_agent()
 class PandaWristCam(Panda):
-    """Panda arm robot with the RealSense camera attached to the gripper."""
+    """Panda arm robot with the real sense camera attached to gripper"""
 
     uid = "panda_wristcam"
     urdf_path = f"{PACKAGE_ASSET_DIR}/robots/panda/panda_v3.urdf"
@@ -52,20 +53,19 @@ class PandaWristCam(Panda):
     def _sensor_configs(self):
         if USE_FRONT_CAMERA:
             return [
-                # Camera mounted on panda_link2
                 CameraConfig(
                     uid="front_camera",
                     pose=sapien.Pose(
-                        p=[0.0, 0.0, 0.15],  # Positioned 15 cm above panda_link2
-                        q=[0.7071, 0.7071, 0, 0],  # Facing straight ahead
+                        p=[0, 0, -0.1],  # 10 cm forward, 20 cm above the base
+                        q=[1, 0, 0, 0]  # Pointing straight ahead
                     ),
                     width=640,
                     height=480,
-                    fov=np.pi / 2,  # 90-degree field of view
+                    fov=np.pi / 3, 
                     near=0.05,
                     far=200,
-                    mount=self.robot.links_map["panda_link2"],
-                ),
+                    mount=self.robot.links_map["panda_link1"],
+                )
             ]
         return [
             CameraConfig(
@@ -73,7 +73,7 @@ class PandaWristCam(Panda):
                 pose=sapien.Pose(p=[0, 0, 0], q=[1, 0, 0, 0]),
                 width=128,
                 height=128,
-                fov=np.pi / 3,
+                fov=np.pi / 2,
                 near=0.01,
                 far=100,
                 mount=self.robot.links_map["camera_link"],
