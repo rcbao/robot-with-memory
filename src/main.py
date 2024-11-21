@@ -2,6 +2,7 @@ import json
 from language_processor import LanguageProcessor
 from memory import Memory
 from movement import fetch_and_place_target_object, init_env, RobotRotator
+from camera_utils import save_camera_image_by_type
 import warnings
 
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -56,7 +57,10 @@ def main():
     print("----------------------------------------")
 
     rotator = RobotRotator(env)
-    rotator.rotate_robot(60)
+    rotator.rotate_robot(20)
+    save_camera_image_by_type(env, "front_camera")
+    rotator.rotate_robot(20, step_size_degrees=-3, max_steps=30)
+    save_camera_image_by_type(env, "front_camera")
     
     while False:
         user_input = input(">> ")
