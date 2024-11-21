@@ -70,15 +70,9 @@ class RobotRotator:
                 continue
 
             angle_diff = self.normalize_angle(target_yaw - current_yaw)
-            if abs(angle_diff) < tolerance_radians:
-                break
-
             rotation_step = np.clip(angle_diff, -step_radians, step_radians)
 
             joint_positions = self.get_current_joint_positions()
-            if joint_positions is None:
-                return
-
             joint_positions[0] = self.normalize_angle(joint_positions[0] + rotation_step)
             action_vector = joint_positions
 

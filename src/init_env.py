@@ -187,7 +187,7 @@ def init_env():
         "MemoryRobot-v2",
         render_mode="rgb_array",
         obs_mode="rgbd",
-        # control_mode="pd_joint_pos",
+        control_mode="pd_joint_pos",
         reward_mode="sparse",
         sensor_configs=config["sensor_configs"],
         human_render_camera_configs=config["human_render_camera_configs"],
