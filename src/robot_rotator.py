@@ -57,12 +57,3 @@ class RobotRotator:
             self.env.step(action_vector)
 
             logging.debug(f"Step {step + 1}: Rotated by {step_size_degrees} degrees.")
-
-        # Optionally, maintain the final position
-        final_joint_positions = self.get_current_joint_positions()
-        if final_joint_positions is not None:
-            self.env.step(final_joint_positions)
-            total_rotation = step_size_degrees * max_steps
-            logging.info(f"Rotation by {total_rotation} degrees completed.")
-        else:
-            logging.error("Failed to maintain final joint positions.")
