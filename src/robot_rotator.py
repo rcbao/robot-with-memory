@@ -1,9 +1,7 @@
-from typing import Optional, Tuple
+from typing import Optional
 import numpy as np
 import logging
 import math
-import torch
-from scipy.spatial.transform import Rotation as R
 
 class RobotRotator:
     def __init__(self, env):
@@ -15,26 +13,13 @@ class RobotRotator:
         """
         self.env = env
 
-    @staticmethod
-    def normalize_angle(angle: float) -> float:
-        """Normalize angle to [-pi, pi]."""
-        return (angle + math.pi) % (2 * math.pi) - math.pi
-
-    def get_current_yaw(self) -> Optional[float]:
-        """Retrieve the robot's current yaw angle in radians."""
-        obs = self.env.get_obs()
-        try:
-            qpos = obs['agent']['qpos'].cpu().numpy().flatten()
-            quat = qpos[3:7]
-            euler = R.from_quat(quat).as_euler('xyz')
-            yaw = euler[2]
-            return yaw
-        except (KeyError, ValueError, AttributeError):
-            logging.error("Failed to retrieve yaw from observations.")
-            return None
-
     def get_current_joint_positions(self) -> Optional[np.ndarray]:
-        """Extract current joint positions."""
+        """
+        Extract current joint positions.
+        
+        Returns:
+            A numpy array of joint positions or None if retrieval fails.
+        """
         obs = self.env.get_obs()
         try:
             joint_positions = obs['agent']['qpos'].cpu().numpy().flatten()
@@ -45,43 +30,39 @@ class RobotRotator:
 
     def rotate_robot(self, step_size_degrees: float = 3, max_steps: int = 15):
         """
-        Rotate the robot's base smoothly by a specified angle.
+        Rotate the robot's base smoothly by a specified step size.
         
         Args:
-            tolerance_degrees (float): Acceptable deviation in degrees.
-            max_steps (int): Maximum rotation steps to prevent infinite loops.
+            step_size_degrees (float): Rotation angle per step in degrees. Positive for left, negative for right.
+            max_steps (int): Maximum number of rotation steps to perform.
+        
+        Example usage:
+            rotator = RobotRotator(env)
+            rotator.rotate_robot()  # Rotate 45 degrees left (3 degrees * 15 steps)
+            rotator.rotate_robot(step_size_degrees=-3, max_steps=30)  # Rotate 90 degrees right
         """
-        angle_degrees = 20
-        tolerance_degrees = 0.5
-
-        target_radians = math.radians(angle_degrees)
         step_radians = math.radians(step_size_degrees)
-        tolerance_radians = math.radians(tolerance_degrees)
 
-        current_yaw = self.get_current_yaw()
-        if current_yaw is None:
-            return
-
-        target_yaw = self.normalize_angle(current_yaw + target_radians)
-
-        for _ in range(max_steps):
-            current_yaw = self.get_current_yaw()
-            if current_yaw is None:
+        for step in range(max_steps):
+            joint_positions = self.get_current_joint_positions()
+            if joint_positions is None:
+                logging.warning(f"Step {step + 1}: Unable to retrieve joint positions. Skipping step.")
                 continue
 
-            angle_diff = self.normalize_angle(target_yaw - current_yaw)
-            rotation_step = np.clip(angle_diff, -step_radians, step_radians)
-
-            joint_positions = self.get_current_joint_positions()
-            joint_positions[0] = self.normalize_angle(joint_positions[0] + rotation_step)
+            # Update the first joint (assumed to control base rotation)
+            joint_positions[0] += step_radians
             action_vector = joint_positions
 
+            # Command the environment to perform the action
             self.env.step(action_vector)
 
-        # Maintain the final position
+            logging.debug(f"Step {step + 1}: Rotated by {step_size_degrees} degrees.")
+
+        # Optionally, maintain the final position
         final_joint_positions = self.get_current_joint_positions()
         if final_joint_positions is not None:
             self.env.step(final_joint_positions)
-            logging.info(f"Rotation by {angle_degrees} degrees completed.")
+            total_rotation = step_size_degrees * max_steps
+            logging.info(f"Rotation by {total_rotation} degrees completed.")
         else:
             logging.error("Failed to maintain final joint positions.")
