@@ -23,8 +23,17 @@
 
 ## Workaround for Panda Wrist Camera Issue
 
-To fix the bug preventing agents from being overridden, update the following file:
-**`~/.conda/envs/maniskill_env/lib/python3.1/site-packages/mani_skill/agents/robots/panda/panda_wristcam.py`**
+To fix the bug preventing agents from being overridden, you must update your panda_wristcam.py file. To get this file's location, run: 
+```python
+import inspect
+from mani_skill.agents.robots import PandaWristCam
+
+path = inspect.getfile(PandaWristCam)
+print("Absolute path of PandaWristCam:", path)
+```
+
+The path will look similar to this, with additional folders in front of lib: 
+**`~/lib/python{version}/site-packages/mani_skill/agents/robots/panda/panda_wristcam.py`**
 
 Replace its contents with this code:
 
