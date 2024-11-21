@@ -1,7 +1,7 @@
 import json
 from language_processor import LanguageProcessor
 from memory import Memory
-from movement import fetch_and_place_target_object, init_env, rotate_robot_to, get_current_joint_positions
+from movement import fetch_and_place_target_object, init_env, RobotRotator
 import warnings
 
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -54,8 +54,11 @@ def main():
     print("Welcome to the Robot Command Interface!")
     print("You can enter commands like 'Fetch the banana for me' or 'Where is the banana?'. Type 'exit' to quit.")
     print("----------------------------------------")
+
+    rotator = RobotRotator(env)
+    rotator.rotate_robot(60)
     
-    while True:
+    while False:
         user_input = input(">> ")
         if user_input.lower() in ['exit', 'quit']:
             print("Exiting. Goodbye!")
@@ -87,23 +90,24 @@ def main():
                 continue
 
             current_joint_positions = get_current_joint_positions(obs)
-            desired_view = "left"
-            rotate_robot_to(env, desired_view, current_joint_positions)
+
+            # rotator = RobotRotator(env)
+            # rotator.rotate_robot(60)
             
             # Execute fetch command
             print(f"Fetching '{object_name}'...")
-            result = fetch_and_place_target_object(env, target_object, dest_coords, vis=False)
+            # result = fetch_and_place_target_object(env, target_object, dest_coords, vis=False)
             
-            if result:
-                print(f"Successfully fetched '{object_name}' and placed it on the table.")
-                # Update memory with new location
-                memory.update_location(
-                    name=object_name, 
-                    new_location={"text": "on the table", "coords": dest_coords}
-                )
-                message_history.append({"role": "assistant", "content": f"Successfully fetched '{object_name}' and placed it on the table."})
-            else:
-                print(f"Failed to fetch '{object_name}'.")
+            # if result:
+            #     print(f"Successfully fetched '{object_name}' and placed it on the table.")
+            #     # Update memory with new location
+            #     memory.update_location(
+            #         name=object_name, 
+            #         new_location={"text": "on the table", "coords": dest_coords}
+            #     )
+            #     message_history.append({"role": "assistant", "content": f"Successfully fetched '{object_name}' and placed it on the table."})
+            # else:
+            #     print(f"Failed to fetch '{object_name}'.")
         
         elif relevancy and object_name and action.lower() == 'recall':
             # Handle recall command
