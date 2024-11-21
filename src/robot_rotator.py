@@ -43,17 +43,17 @@ class RobotRotator:
             logging.error("Failed to retrieve joint positions.")
             return None
 
-    def rotate_robot(self, angle_degrees: float, step_size_degrees: float = 3, 
-                     tolerance_degrees: float = 0.5, max_steps: int = 15):
+    def rotate_robot(self, step_size_degrees: float = 3, max_steps: int = 15):
         """
         Rotate the robot's base smoothly by a specified angle.
         
         Args:
-            angle_degrees (float): Angle to rotate in degrees.
-            step_size_degrees (float): Rotation step size per iteration in degrees.
             tolerance_degrees (float): Acceptable deviation in degrees.
             max_steps (int): Maximum rotation steps to prevent infinite loops.
         """
+        angle_degrees = 20
+        tolerance_degrees = 0.5
+
         target_radians = math.radians(angle_degrees)
         step_radians = math.radians(step_size_degrees)
         tolerance_radians = math.radians(tolerance_degrees)

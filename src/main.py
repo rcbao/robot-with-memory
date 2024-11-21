@@ -57,12 +57,12 @@ def main():
     print("----------------------------------------")
 
     rotator = RobotRotator(env)
-    rotator.rotate_robot(20)
+    rotator.rotate_robot()
     save_camera_image_by_type(env, "front_camera")
-    rotator.rotate_robot(20, step_size_degrees=-3, max_steps=30)
+    rotator.rotate_robot(step_size_degrees=-3, max_steps=30)
     save_camera_image_by_type(env, "front_camera")
     
-    while False:
+    while True:
         user_input = input(">> ")
         if user_input.lower() in ['exit', 'quit']:
             print("Exiting. Goodbye!")
@@ -93,25 +93,20 @@ def main():
                 print(f"Object '{object_name}' not found in the environment.")
                 continue
 
-            current_joint_positions = get_current_joint_positions(obs)
-
-            # rotator = RobotRotator(env)
-            # rotator.rotate_robot(60)
-            
             # Execute fetch command
             print(f"Fetching '{object_name}'...")
-            # result = fetch_and_place_target_object(env, target_object, dest_coords, vis=False)
+            result = fetch_and_place_target_object(env, target_object, dest_coords, vis=False)
             
-            # if result:
-            #     print(f"Successfully fetched '{object_name}' and placed it on the table.")
-            #     # Update memory with new location
-            #     memory.update_location(
-            #         name=object_name, 
-            #         new_location={"text": "on the table", "coords": dest_coords}
-            #     )
-            #     message_history.append({"role": "assistant", "content": f"Successfully fetched '{object_name}' and placed it on the table."})
-            # else:
-            #     print(f"Failed to fetch '{object_name}'.")
+            if result:
+                print(f"Successfully fetched '{object_name}' and placed it on the table.")
+                # Update memory with new location
+                memory.update_location(
+                    name=object_name, 
+                    new_location={"text": "on the table", "coords": dest_coords}
+                )
+                message_history.append({"role": "assistant", "content": f"Successfully fetched '{object_name}' and placed it on the table."})
+            else:
+                print(f"Failed to fetch '{object_name}'.")
         
         elif relevancy and object_name and action.lower() == 'recall':
             # Handle recall command
