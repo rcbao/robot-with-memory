@@ -19,6 +19,43 @@ def move_to_pose(planner, target_pose, dry_run=False):
         result = planner.move_to_pose_with_RRTConnect(target_pose, dry_run=dry_run)
     return result != -1
 
+
+def rotate_robot_to(env, view, current_joint_positions):
+    """
+    Rotates the robot's link1 joint to the specified view direction.
+    """
+    view_angles = {"center": 0, "left": np.pi / 4, "right": -np.pi / 4}
+    target_angle = view_angles.get(view, 0)  # Default to 'center' if view is invalid
+
+    action_vector = np.zeros(8, dtype=np.float32)
+    action_vector[0] = target_angle
+
+    steps = 100
+
+    for _ in range(steps):        
+        obs, _, done, _, _ = env.step(action_vector)
+        if done:
+            break
+    print(f"Rotated to {view}")
+    return obs
+
+
+def get_current_joint_positions(obs):
+    """
+    Extracts current joint positions from the observation.
+    """
+    # Assuming joint positions are stored under the key 'joint_positions' or similar
+    print("obs::")
+    print(obs)
+    joint_positions = obs[0]['agent']['qpos'].cpu().numpy().flatten()
+
+
+    if joint_positions is not None:
+        return joint_positions
+    else:
+        raise KeyError("Joint positions not found in observation data.")
+
+
 def fetch_and_place_target_object(env, target_object, dest_coords, debug=False, vis=False):
     planner = PandaArmMotionPlanningSolver(
         env,
@@ -80,7 +117,6 @@ def fetch_and_place_target_object(env, target_object, dest_coords, debug=False, 
     
     # Release the object
     planner.open_gripper()
-    
     
     planner.close()
     return True

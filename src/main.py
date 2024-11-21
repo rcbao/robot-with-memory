@@ -1,7 +1,7 @@
 import json
 from language_processor import LanguageProcessor
 from memory import Memory
-from movement import fetch_and_place_target_object, init_env
+from movement import fetch_and_place_target_object, init_env, rotate_robot_to, get_current_joint_positions
 import warnings
 
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -48,7 +48,7 @@ def main():
     memory = Memory()
     lang_processor = LanguageProcessor()
     env = init_env()
-    env.reset()
+    obs = env.reset()
     message_history = []  # Initialize empty message history
     print("----------------------------------------")
     print("Welcome to the Robot Command Interface!")
@@ -85,6 +85,10 @@ def main():
             if not target_object:
                 print(f"Object '{object_name}' not found in the environment.")
                 continue
+
+            current_joint_positions = get_current_joint_positions(obs)
+            desired_view = "left"
+            rotate_robot_to(env, desired_view, current_joint_positions)
             
             # Execute fetch command
             print(f"Fetching '{object_name}'...")
