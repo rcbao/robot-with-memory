@@ -17,6 +17,8 @@
    ```bash
    pip install openai
    pip install opencv-python
+
+   python -m mani_skill.utils.download_asset ycb 
    ```
 
 ---
