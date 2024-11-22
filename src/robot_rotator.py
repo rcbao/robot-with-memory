@@ -94,3 +94,46 @@ class RobotRotator:
     
     def reset_joint_positions(self):
         self.move_to_joint_positions(self.init_joint_pos)
+
+    def rotate_robot_to_view(self, view: str):
+        """
+        Reset the robot to the initial position and rotate it to the specified view.
+        
+        Args:
+            view (str): The desired view to rotate the robot to. 
+                        Options are "left", "center", "right".
+        
+        Example usage:
+            rotator = RobotRotator(env)
+            rotator.rotate_robot_to_view("left")    # Rotate to -60 degrees
+            rotator.rotate_robot_to_view("center")  # Rotate to 0 degrees
+            rotator.rotate_robot_to_view("right")   # Rotate to 60 degrees
+        """
+        # Reset the robot to the initial joint positions
+        self.reset_joint_positions()
+        logging.info("Robot joint positions have been reset to the initial configuration.")
+
+        # Define target angles for each view in degrees
+        target_angles = {
+            "left": 60,
+            "center": 0,
+            "right": -60
+        }
+
+        # Retrieve the target angle based on the view
+        angle = target_angles.get(view.lower())
+        if angle is None:
+            logging.error(f"Unknown view: '{view}'. Valid options are 'left', 'center', 'right'.")
+            return
+
+        # Determine the direction and number of steps required
+        step_size_degrees = 3  # Degrees per step
+        max_steps = int(abs(angle) / step_size_degrees)  # Total steps to reach target angle
+        step_direction = 1 if angle > 0 else -1  # 1 for left, -1 for right
+
+        logging.info(f"Rotating robot to '{view}' view: {angle} degrees in {max_steps} steps.")
+
+        # Perform the rotation
+        self.rotate_robot(step_size_degrees=step_size_degrees * step_direction, max_steps=max_steps)
+
+        logging.info(f"Rotation to '{view}' view completed.")

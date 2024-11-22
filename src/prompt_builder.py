@@ -60,3 +60,10 @@ class PromptBuilder:
         user_prompt = self.build_generic_prompt(user_command)
         messages = self.build_messages(user_prompt, message_history)
         return messages
+
+    def build_image_parser_prompts(self) -> str:
+        paths = prompt_paths["task_specific"]["parse_image"]
+        system_prompt = self.file_handler.read_file(paths["system"])
+        user_prompt = self.file_handler.read_file(paths["user"])
+
+        return system_prompt, user_prompt

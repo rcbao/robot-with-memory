@@ -7,6 +7,12 @@ prompt_paths = {
     "user": {
         "parse_input_json": "./llm_prompts/parse_input_json_user.txt",
         "recall": "./llm_prompts/recall_object_user.txt"
+    },
+    "task_specific": {
+        "parse_image": {
+            "system": "./llm_prompts/parse_image_system.txt",
+            "user": "./llm_prompts/parse_image_user.txt"
+        }
     }
 }
 

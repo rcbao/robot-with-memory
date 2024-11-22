@@ -1,6 +1,7 @@
 import datetime
 from PIL import Image
-
+import io
+import base64
 import numpy as np
 import gymnasium as gym
 
@@ -8,7 +9,24 @@ def save_camera_image_by_type(env, camera_type="base_camera"):
     obs = env.unwrapped.get_obs()
     if 'sensor_data' in obs:
         rgb_image = obs['sensor_data'][camera_type]['rgb'].squeeze(0).cpu().numpy()
-        Image.fromarray(rgb_image).save(f"sensor_image-{datetime.datetime.now():%Y%m%d-%H%M%S}-{camera_type}.png")
+
+        # Convert the image to PIL format
+        image = Image.fromarray(rgb_image)
+
+        # Save the image to a buffer
+        buffer = io.BytesIO()
+        image.save(buffer, format="JPEG")
+        buffer.seek(0)
+
+        # Encode the image in base64
+        encoded_image = base64.b64encode(buffer.read()).decode('utf-8')
+
+        # Optionally, save the image as a file with a timestamp
+        image.save(f"sensor_image-{datetime.datetime.now():%Y%m%d-%H%M%S}-{camera_type}.png")
+
+        return encoded_image
+    else:
+        raise KeyError(f"Camera type '{camera_type}' not found in the environment observations.")
 
 
 def get_camera_image(env) -> np.ndarray:

@@ -124,6 +124,46 @@ class LanguageProcessor:
         else:
             return None
 
+    def list_objects_in_scene_image(self, base64_image: str) -> list:
+
+        # Create the message payload
+        system_prompt, user_prompt = self.prompt_builder.build_image_parser_prompts()
+        messages = [
+            {
+                "role": "system", 
+                "content": system_prompt
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": user_prompt,
+                    },
+                    {
+                    "type": "image_url",
+                    "image_url": {
+                        "url":  f"data:image/jpeg;base64,{base64_image}"
+                        },
+                    },
+                ],
+            }
+        ]
+        response = self.client.chat.completions.create(
+            model="gpt-4o",
+            messages=messages
+        )
+        print("response.choices[0]::")
+        print(response.choices[0])
+        response_text = response.choices[0].message.content.strip()
+        print("response_text::")
+        print(response_text)
+        response_text = response_text.removeprefix("```json")
+        response_text = response_text.removesuffix("```")
+        response = json.loads(response_text)
+
+        return response
+
 if __name__ == "__main__":
     lang = LanguageProcessor()
     output = lang.parse_user_input("what did we do so far?", [])
