@@ -12,6 +12,7 @@ class RobotRotator:
             env: The robot's simulation environment.
         """
         self.env = env
+        self.init_joint_pos = self.get_current_joint_positions()
 
     def get_current_joint_positions(self) -> Optional[np.ndarray]:
         """
@@ -57,3 +58,39 @@ class RobotRotator:
             self.env.step(action_vector)
 
             logging.debug(f"Step {step + 1}: Rotated by {step_size_degrees} degrees.")
+
+    def move_to_joint_positions(self, target_joint_positions: np.ndarray, step_size_degrees: float = 1, max_steps: int = 50):
+        """
+        Move the robot smoothly to the specified joint positions.
+
+        Args:
+            target_joint_positions (np.ndarray): Desired joint positions array.
+            step_size_degrees (float): Maximum degrees to move per step.
+            max_steps (int): Maximum number of steps to reach the target.
+        """
+        current_joint_positions = self.get_current_joint_positions()
+        if current_joint_positions is None:
+            logging.error("Current joint positions not available.")
+            return
+
+        step_size_radians = math.radians(step_size_degrees)
+        for step in range(max_steps):
+            error = target_joint_positions - current_joint_positions
+            if np.all(np.abs(error) <= step_size_radians):
+                current_joint_positions = target_joint_positions
+            else:
+                step_direction = np.sign(error)
+                step_increment = step_direction * step_size_radians
+                current_joint_positions += step_increment
+
+            action_vector = current_joint_positions
+            self.env.step(action_vector)
+
+            logging.debug(f"Step {step + 1}: Moving joints towards target positions.")
+
+            if np.allclose(current_joint_positions, target_joint_positions, atol=step_size_radians):
+                logging.debug("Target joint positions reached.")
+                break
+    
+    def reset_joint_positions(self):
+        self.move_to_joint_positions(self.init_joint_pos)
