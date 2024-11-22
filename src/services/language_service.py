@@ -10,7 +10,7 @@ from prompt_builder import PromptBuilder
 load_dotenv()
 
 
-class LanguageProcessor:
+class LanguageService:
     def __init__(self):
         """
         Initialize the LanguageProcessor with OpenAI API key.

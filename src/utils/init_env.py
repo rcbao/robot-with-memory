@@ -20,7 +20,7 @@ from mani_skill.utils.structs.pose import Pose
 from mani_skill.sensors.camera import CameraConfig
 
 from constants import OUTPUT_DIR, ASSET_DIR, CAMERA_CONFIG_DEFAULT, CAMERA_CONFIGS_HIGH_QUALITY, USING_HQ_CAMERA
-from camera_utils import StepImageCaptureWrapper
+from utils.camera_utils import StepImageCaptureWrapper
 
 
 def short_uuid():

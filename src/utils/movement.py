@@ -9,9 +9,9 @@ from mani_skill.examples.motionplanning.panda.utils import (
     compute_grasp_info_by_obb,
     get_actor_obb,
 )
-from init_env import add_object_to_scene_ycb, init_env
 from mani_skill.utils.wrappers.record import RecordEpisode
-from robot_rotator import RobotRotator
+from utils.robot_rotator import RobotRotator
+from utils.init_env import add_object_to_scene_ycb, init_env
 
 def move_to_pose(planner, target_pose, dry_run=False):
     result = planner.move_to_pose_with_screw(target_pose, dry_run=dry_run)
