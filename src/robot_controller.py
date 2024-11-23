@@ -1,11 +1,13 @@
 from typing import List, Dict
 from services.location_oracle_service import Oracle
-from services.memory_service import Memory
+from services.memory_service import MemoryService
 from services.language_service import LanguageService
 from services.fetch_service import FetchService
+from services.vision_service import VisionService
 from utils.logger import setup_logger
 from utils.robot_rotator import RobotRotator
 from utils.init_env import init_env
+from constants import VIEWS
 
 logger = setup_logger()
 
@@ -14,16 +16,18 @@ class RobotController:
     Controller class to manage robot operations based on user commands.
     """
     def __init__(self):
+        self.env = init_env()
+        self.env.reset()
+
         # Initialize services
         self.oracle_service = Oracle()
         if not self.oracle_service.data:
             logger.error("Failed to load Oracle data. Exiting controller initialization.")
             raise SystemExit("Oracle data is essential for operation.")
-        
-        self.memory_service = Memory()
+        self.memory_service = MemoryService()
         self.lang_service = LanguageService()
-        self.env = init_env()
-        self.env.reset()
+        self.vision_service = VisionService(self.oracle_service, self.env)
+
         logger.info("Environment initialized.")
 
         self.rotator = RobotRotator(self.env)
@@ -31,6 +35,7 @@ class RobotController:
             oracle_service=self.oracle_service,
             memory_service=self.memory_service,
             lang_service=self.lang_service,
+            vision_service=self.vision_service,
             env=self.env,
             rotator=self.rotator
         )
@@ -44,44 +49,49 @@ class RobotController:
         Args:
             object_name (str): Name of the object to recall.
         """
-        found = False
-        views = ["left", "center", "right"]
+        obj = self.memory_service.get_object(object_name)
+        if obj:
+            message = obj.get("location", {}).get("text", "<Location unknown>")
+            logger.info(f"Recall: {message}")
+            self.message_history.append({"role": "assistant", "content": message})
+            print(message)
+            return
 
-        for view in views:
+        found_in_sight = False
+
+        print(f"> Object not found in memory. Scanning the environment to find the {object_name}...")
+
+        for view in VIEWS:
             logger.info(f"Rotating to '{view}' view.")
             self.rotator.rotate_robot_to_view(view)
-            detected_object = self.fetch_service.detect_object_from_camera_image(object_name)
-            if detected_object:
-                detect_location = detected_object.get("location", {})
-                location_text = detect_location.get("text", "")
+            item = self.vision_service.detect_object_from_camera_image(object_name, view)
 
-                match_name, detail, coords = self.get_match_info(detected_object)
-                location_coords = self.oracle_service.get_object_coordinates(match_name)
+            if item:
+                name, detail = item["name"], item["detail"]
+                location = item.get("location", {})
 
-                self.memory_service.add_object(
-                    name=object_name,
-                    detail=detected_object.get("detail", ""),
-                    location={"text": location_text, "coords": location_coords}
-                )
-                logger.info(f"Recall: {location_text}")
-                self.message_history.append({"role": "assistant", "content": location_text})
-                print(location_text)
-                found = True
+                item_coordinates = self.oracle_service.get_object_coordinates(name)
+
+                location["coords"] = item_coordinates
+
+                existing_object = self.memory_service.get_object(name)
+                if not existing_object:
+                    self.memory_service.add_object(
+                        name=name,
+                        detail=detail,
+                        location=location
+                    )
+                message = location["text"]
+                self.message_history.append({"role": "assistant", "content": message})
+                found_in_sight = True
+                print(message)
                 break
 
-        if not found:
-            obj = self.memory_service.get_object(object_name)
-            if obj:
-                location_text = obj.get("location", {}).get("text", "unknown location")
-                message = f"The {object_name} is {location_text}."
-                logger.info(f"Recall: {message}")
-                self.message_history.append({"role": "assistant", "content": message})
-                print(message)
-            else:
-                message = f"I don't have any record of the {object_name}."
-                logger.info(f"Recall: {message}")
-                self.message_history.append({"role": "assistant", "content": message})
-                print(message)
+        if not found_in_sight:
+            message = f"I don't have any record of the {object_name}."
+            logger.info(f"Recall: {message}")
+            self.message_history.append({"role": "assistant", "content": message})
+            print(message)
 
 
     def process_command(self, user_input: str):

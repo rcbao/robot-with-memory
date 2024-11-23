@@ -4,12 +4,12 @@ from typing import Optional, Dict
 
 MEMORY_FILE = "memory.json"
 
-class Memory:
+class MemoryService:
     def __init__(self, file_path: str = MEMORY_FILE):
         self.file_path = file_path
         self.memory = self.load_memory()
 
-    def load_memory(self) -> Dict:
+    def load_memory(self) -> list:
         """Load memory from a JSON file."""
         if os.path.exists(self.file_path):
             with open(self.file_path, "r") as f:
@@ -18,7 +18,7 @@ class Memory:
                 except json.JSONDecodeError:
                     print("Memory file is corrupted. Starting with an empty memory.")
 
-        return {}
+        return []
 
     def save_memory(self):
         """Save current memory to a JSON file."""
@@ -27,52 +27,53 @@ class Memory:
 
     def add_object(self, name: str, detail: Optional[str], location: Dict):
         """Add a new object to memory."""
-        self.memory[name] = {
+        # Check if object already exists
+        for obj in self.memory:
+            if obj["name"] == name:
+                return
+
+        # Add new object to memory
+        print("=====")
+        print(self.memory)
+        self.memory.append({
+            "name": name,
             "detail": detail,
             "location": location
-        }
+        })
         self.save_memory()
 
     def update_location(self, name: str, new_location: Dict):
         """Update the location of an existing object."""
-        if name in self.memory:
-            self.memory[name]["location"] = new_location
-            self.save_memory()
-        else:
-            print(f"Object '{name}' not found in memory.")
+        for obj in self.memory:
+            if obj["name"] == name:
+                obj["location"] = new_location
+                self.save_memory()
+                return
+
+        print(f"Object '{name}' not found in memory.")
 
     def get_object(self, name: str) -> Optional[Dict]:
         """Retrieve an object's details and location."""
-        return self.memory.get(name, None)
+        for obj in self.memory:
+            if obj["name"] == name:
+                return obj
+        return None
 
     def remove_object(self, name: str):
         """Remove an object from memory."""
-        if name in self.memory:
-            del self.memory[name]
-            self.save_memory()
-        else:
-            print(f"Object '{name}' not found in memory.")
+        for obj in self.memory:
+            if obj["name"] == name:
+                self.memory.remove(obj)
+                self.save_memory()
+                return
 
-    def list_objects(self) -> Dict:
+        print(f"Object '{name}' not found in memory.")
+
+    def list_objects(self) -> list:
         """List all objects in memory."""
         return self.memory
 
     def clear_memory(self):
-        """Save current memory to a JSON file."""
-        with open(self.file_path, "w") as f:
-            json.dump({}, f, indent=4)
-
-# Example Usage:
-if __name__ == "__main__":
-    mem = Memory()
-
-    # Retrieve an object
-    banana = mem.get_object("banana")
-    print("Banana Details:", banana)
-
-    # List all objects
-    all_objects = mem.list_objects()
-    print("All Objects in Memory:", all_objects)
-
-    # Remove an object
-    mem.remove_object("apple")
+        """Clear all memory."""
+        self.memory = []
+        self.save_memory()

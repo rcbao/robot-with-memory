@@ -77,3 +77,12 @@ class PromptBuilder:
         user_prompt = self.file_handler.read_file(paths["user"])
 
         return system_prompt, user_prompt
+        
+    def clean_up_json(self, llm_response: str) -> str:
+        """
+        Remove code block from JSON.
+        """
+        llm_response = llm_response.removeprefix("```json")
+        llm_response = llm_response.removesuffix("```")
+        llm_response = llm_response.strip()
+        return llm_response

@@ -40,5 +40,5 @@ CAMERA_CONFIG_DEFAULT = {
     "enable_shadow": True,
 }
 
-VIEWS = ["left", "center", "right"]
+VIEWS = ["left", "front", "right"]
 TARGET_COORDINATES = [0.05, 0.05, 0]

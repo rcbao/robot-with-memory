@@ -23,15 +23,6 @@ class LanguageService:
             error_message = "OpenAI API key not provided. Set the 'OPENAI_API_KEY' environment variable."
             raise ValueError(error_message)
 
-    def clean_up_json(self, llm_response: str) -> str:
-        """
-        Remove code block from JSON.
-        """
-        llm_response = llm_response.removeprefix("```json")
-        llm_response = llm_response.removesuffix("```")
-        llm_response = llm_response.strip()
-        return llm_response
-
     def get_llm_response(self, messages: list, max_tokens: int, temperature: float) -> str:
         """
         Interact with the GPT-4o model and return a response.
@@ -68,7 +59,7 @@ class LanguageService:
         )
 
         if response_content:
-            response_content = self.clean_up_json(response_content)
+            response_content = self.prompt_builder.clean_up_json(response_content)
             try:
                 parsed = json.loads(response_content)
 
@@ -156,10 +147,8 @@ class LanguageService:
         response_text = response.choices[0].message.content.strip()
         print("response_text::")
         print(response_text)
-        response_text = response_text.removeprefix("```json")
-        response_text = response_text.removesuffix("```")
+        response_text = self.prompt_builder.clean_up_json(response_text)
         response = json.loads(response_text)
-
         return response
 
 if __name__ == "__main__":

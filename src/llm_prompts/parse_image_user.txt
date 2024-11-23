@@ -1,1 +1,2 @@
-Identify object in this image captured by the robot camera.
+This is an image captured by the robot camera. The image shows the robot's {view} view. 
+Identify object in this image.
