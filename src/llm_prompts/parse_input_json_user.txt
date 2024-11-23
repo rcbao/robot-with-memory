@@ -1,17 +1,27 @@
-## User command ##
+## User Input ##
 ``` {user_command} ```
 
 ------------
 
-Your task is to parse the user's command into a JSON object. The JSON object should have the following keys:
-- `action` (string): the type of action. The value can be `fetch`, `recall`, or `generic`. Use `generic` if the command is broadly related to the situation. (Example: if the user requests to summarize the interaction so far.)
-- `object_name` (string): a short name of the object
-- `detail` (string): the details of the object. This includes color, size, description of position, and so on.
-- `relevancy` (boolean): if the command is relevant. The value can be `true` or `false`.
+Your task is to parse the user's input into a JSON object with the following keys:
+- `relevancy` (boolean): if the command is relevant to the situation. The value can be `true` or `false`.
+- `action` (string): the type of action. The value can be `fetch`, `recall`, or `generic`. If the input is broadly related to the situation (e.g., if requests for summarizing the interaction so far), set `action` to `generic`.
+- `object_name` (string): a short name of the object (e.g., apple, pear, tomato soup, etc) mentioned in the input.
+- `detail` (string): details mentioned in the input. For `fetch` and `recall` inputs, this includes color, size, description of position, and so on. For generic user inputs, put the entire input in this field. 
 
 ## Examples ##
 Input: """Fetch me the banana"""
 Ouptut: ```json\n{{"action":"fetch","object_name":"banana","detail":"","relevancy":true}}\n```
+
+
+Input: """Please give me the pear"""
+Ouptut: ```json\n{{"action":"fetch","object_name":"pear","detail":"","relevancy":true}}\n```
+
+Input: """Put the apple on the table"""
+Ouptut: ```json\n{{"action":"fetch","object_name":"apple","detail":"","relevancy":true}}\n```
+
+Input: """Where is the banana?"""
+Output: ```json\n{{"action":"recall","object_name":"banana","detail":"","relevancy":true}}\n```
 
 Input: """Where is the apple?"""
 Output: ```json\n{{"action":"recall","object_name":"apple","detail":"","relevancy":true}}\n```

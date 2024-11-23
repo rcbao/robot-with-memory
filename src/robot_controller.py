@@ -38,23 +38,50 @@ class RobotController:
 
     def handle_recall(self, object_name: str):
         """
-        Handle the recall command by retrieving object information from memory.
+        Handle the recall command by first rotating and observing the environment 
+        in three directions to locate the object, and then checking memory.
 
         Args:
             object_name (str): Name of the object to recall.
         """
-        obj = self.memory_service.get_object(object_name)
-        if obj:
-            location_text = obj.get("location", {}).get("text", "unknown location")
-            message = f"The {object_name} is {location_text}."
-            logger.info(f"Recall: {message}")
-            self.message_history.append({"role": "assistant", "content": message})
-            print(message)
-        else:
-            message = f"I don't have any record of the {object_name}."
-            logger.info(f"Recall: {message}")
-            self.message_history.append({"role": "assistant", "content": message})
-            print(message)
+        found = False
+        views = ["center", "left", "right"]
+
+        for view in views:
+            logger.info(f"Rotating to '{view}' view.")
+            self.rotator.rotate_robot_to_view(view)
+            detected_object = self.fetch_service.detect_object(object_name)
+            if detected_object:
+                detect_location = detected_object.get("location", {})
+
+                location_text = detect_location.get("text", [])
+                location_coords = self.oracle_service.get_object_coordinates(match_name)
+
+                self.memory_service.add_object(
+                    name=object_name,
+                    detail=detected_object.get("detail", ""),
+                    location={"text": location_text, "coords": location_coords}
+                )
+                logger.info(f"Recall: {location_text}")
+                self.message_history.append({"role": "assistant", "content": location_text})
+                print(location_text)
+                found = True
+                break
+
+        if not found:
+            obj = self.memory_service.get_object(object_name)
+            if obj:
+                location_text = obj.get("location", {}).get("text", "unknown location")
+                message = f"The {object_name} is {location_text}."
+                logger.info(f"Recall: {message}")
+                self.message_history.append({"role": "assistant", "content": message})
+                print(message)
+            else:
+                message = f"I don't have any record of the {object_name}."
+                logger.info(f"Recall: {message}")
+                self.message_history.append({"role": "assistant", "content": message})
+                print(message)
+
 
     def process_command(self, user_input: str):
         """
