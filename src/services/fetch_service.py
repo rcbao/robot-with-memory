@@ -101,19 +101,20 @@ class FetchService:
         if self.fetch_from_memory(object_name):
             return
 
+        item_not_in_memory_message = f"I could not locate '{object_name}' in memory. "
         logger.info(item_not_in_memory_message)
         
         for view in VIEWS:
             logger.info(f"Rotating to '{view}' view.")
             self.rotator.rotate_robot_to_view(view)
             if self.fetch_from_camera_view(object_name, view):
-                item_found_message = f"I could not locate '{object_name}' in memory. After scanning, I have successfully found {object_name} in my {view} view. "
+                item_found_message = f"After scanning, I have successfully found {object_name} in my {view} view. "
 
                 full_message = {"role": "assistant", "content": f"{item_not_in_memory_message} {item_found_message}"}
                 message_history.append(full_message)
                 return
 
-        item_not_found_message = "I can't find the object."
+        item_not_found_message = "I could not find the object after scanning the environment."
         logger.info(item_not_found_message)
         
         full_message = {"role": "assistant", "content": f"{item_not_in_memory_message} {item_not_found_message}"}
