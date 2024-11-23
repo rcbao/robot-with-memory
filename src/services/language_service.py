@@ -153,8 +153,6 @@ class LanguageService:
             model="gpt-4o",
             messages=messages
         )
-        print("response.choices[0]::")
-        print(response.choices[0])
         response_text = response.choices[0].message.content.strip()
         print("response_text::")
         print(response_text)

@@ -83,7 +83,7 @@ def fetch_and_place_target_object(env, target_object, dest_coords, debug=False, 
     # Release the object
     planner.open_gripper()
 
-    post_release_lift = sapien.Pose([0, 0, 0.05]) * final_destination_pose  # Move slightly up
+    post_release_lift = sapien.Pose([-0.1, 0, 0.25]) * final_destination_pose  # Move slightly up
     move_to_pose(planner, post_release_lift)
     
     planner.close()

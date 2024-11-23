@@ -19,6 +19,9 @@ Output: ```json\n{{"action":"recall","object_name":"apple","detail":"","relevanc
 Input: """What did we do so far?"""
 Output: ```json\n{{"action":"generic","object_name":"","detail":"What did we do so far?","relevancy":true}}\n```
 
+Input: """What objects did I ask you to fetch in this session?"""
+Output: ```json\n{{"action":"generic","object_name":"","detail":"What objects did I ask you to fetch in this session?","relevancy":true}}\n```
+
 ------------
 
 If the command is not relevant to fetching or observing, set `relevancy` to false. Output the JSON object below.

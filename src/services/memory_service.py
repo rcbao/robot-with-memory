@@ -57,6 +57,11 @@ class Memory:
         """List all objects in memory."""
         return self.memory
 
+    def clear_memory(self):
+        """Save current memory to a JSON file."""
+        with open(self.file_path, "w") as f:
+            json.dump({}, f, indent=4)
+
 # Example Usage:
 if __name__ == "__main__":
     mem = Memory()

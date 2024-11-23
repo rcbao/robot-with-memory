@@ -92,5 +92,6 @@ class RobotController:
         """
         Clean up resources before shutting down.
         """
+        self.memory_service.clear_memory()
         self.env.close()
         logger.info("Environment closed.")

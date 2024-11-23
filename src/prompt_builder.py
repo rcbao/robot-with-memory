@@ -4,6 +4,16 @@ import re
 from file_handler import FileHandler
 from constants import prompt_paths
 
+GENERIC_RESPONSE_PROMPT = f"""Your task is to write a response to the above user input.
+----------
+## Example Input ## What did we do so far? ##
+## Example Output ## So far, I have fetched a banana and an apple on your request. I also answered questions about the apple's current location. Let me know if you need anything else! ##
+
+## Example Input ## What fruits did I ask you to fetch?  ##
+## Example Output ## You have asked me to fetch a pear and an apple. I have placed them both on the table. ##
+----------
+Answer in a friendly manner.
+"""
 
 class PromptBuilder:
     def __init__(self):
@@ -27,7 +37,7 @@ class PromptBuilder:
         return recall_prompt
 
     def build_generic_prompt(self, user_command: str) -> str:
-        prompt = f"""Please respond to the following user input: ''' {user_command} '''. Answer in a friendly manner."""
+        prompt = f"User Input: ```{user_command}```. {GENERIC_RESPONSE_PROMPT}"
         return prompt
 
     def build_initial_messages(self, user_prompt: str):
