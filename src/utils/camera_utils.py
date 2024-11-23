@@ -5,6 +5,12 @@ import base64
 import numpy as np
 import gymnasium as gym
 
+def resize_image_by_factor(image, factor: float = 0.5):
+    new_size = (int(image.width * factor), int(image.height * factor))
+    image = image.resize(new_size)
+    return image
+
+
 def save_camera_image_by_type(env, camera_type="base_camera"):
     obs = env.unwrapped.get_obs()
     if 'sensor_data' in obs:
@@ -12,6 +18,7 @@ def save_camera_image_by_type(env, camera_type="base_camera"):
 
         # Convert the image to PIL format
         image = Image.fromarray(rgb_image)
+        image = resize_image_by_factor(image, 0.6)
 
         # Save the image to a buffer
         buffer = io.BytesIO()

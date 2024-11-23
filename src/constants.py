@@ -39,3 +39,6 @@ CAMERA_CONFIG_DEFAULT = {
     "viewer_camera_configs": {"fov": 1},
     "enable_shadow": True,
 }
+
+VIEWS = ["left", "center", "right"]
+TARGET_COORDINATES = [0.05, 0.05, 0]

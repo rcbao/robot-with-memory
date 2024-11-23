@@ -4,7 +4,7 @@ from utils.logger import setup_logger
 
 logger = setup_logger()
 
-class OracleService:
+class Oracle:
     """
     Service to handle loading and retrieving object coordinates from the oracle.
     """
@@ -39,14 +39,16 @@ class OracleService:
             logger.error("Oracle data is not loaded.")
             return None
         try:
-            coords = self.data[object_name.lower()]["location"]["coords"]
+            matches = [item for item in  self.data if item["name"] == object_name.lower()]
+            top_match = matches[0]
+            coords = top_match["location"]["coords"]
             logger.info(f"Retrieved coordinates for '{object_name}': {coords}.")
             return coords
         except KeyError:
             logger.warning(f"Coordinates for '{object_name}' not found in oracle.")
             return None
 
-    def get_valid_objects(self) -> list:
+    def get_valid_item_names(self) -> list:
         """
         Get a list of valid object names from the oracle.
 
@@ -55,4 +57,5 @@ class OracleService:
         """
         if not self.data:
             return []
-        return list(self.data.keys())
+            
+        return [item["name"] for item in self.data]

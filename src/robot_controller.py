@@ -1,5 +1,5 @@
 from typing import List, Dict
-from services.location_oracle_service import OracleService
+from services.location_oracle_service import Oracle
 from services.memory_service import Memory
 from services.language_service import LanguageService
 from services.fetch_service import FetchService
@@ -15,7 +15,7 @@ class RobotController:
     """
     def __init__(self):
         # Initialize services
-        self.oracle_service = OracleService()
+        self.oracle_service = Oracle()
         if not self.oracle_service.data:
             logger.error("Failed to load Oracle data. Exiting controller initialization.")
             raise SystemExit("Oracle data is essential for operation.")
@@ -45,16 +45,17 @@ class RobotController:
             object_name (str): Name of the object to recall.
         """
         found = False
-        views = ["center", "left", "right"]
+        views = ["left", "center", "right"]
 
         for view in views:
             logger.info(f"Rotating to '{view}' view.")
             self.rotator.rotate_robot_to_view(view)
-            detected_object = self.fetch_service.detect_object(object_name)
+            detected_object = self.fetch_service.detect_object_from_camera_image(object_name)
             if detected_object:
                 detect_location = detected_object.get("location", {})
+                location_text = detect_location.get("text", "")
 
-                location_text = detect_location.get("text", [])
+                match_name, detail, coords = self.get_match_info(detected_object)
                 location_coords = self.oracle_service.get_object_coordinates(match_name)
 
                 self.memory_service.add_object(

@@ -4,10 +4,10 @@ Your task is to list all the objects you see in the scene images. You must respo
 
 ----------
 ## Example Output 1 ##
-[{"orange":{"detail":"A big orange","location":{"text": "The orange is on the left shelf."}}}]
+[{{"name":"orange","detail":"A big orange","location":{"text": "The orange is on the left shelf."}}}]
 
 ## Example Output 2 ##
-[{"orange":{"detail":"A big orange","location":{"text":"The orange is on the left shelf."}}}, {"bowl":{"detail":"A blue, medium-sized bowl","location":{"text":"The bowl is on the right shelf."}}},{"chip can":{"detail":"A Pringles chip can with red packaging","location":{"text":"The chip can is on the table."}}}]
+[{"name":"orange","detail":"A big orange","location":{"text":"The orange is on the left shelf."}}, {"name":"bowl","detail":"A blue, medium-sized bowl","location":{"text":"The bowl is on the right shelf."}},{"name":"chip can","detail":"A Pringles chip can with red packaging","location":{"text":"The chip can is on the table."}}]
 
 ## Example Output 3 ##
-[{"banana":{"detail":"A yellow banana","location":{"text":"The banana is on the right shelf"}}}]
+[{"name":"banana","detail":"A yellow banana","location":{"text":"The banana is on the right shelf"}}]
