@@ -13,9 +13,6 @@ class RobotRotator:
         """
         self.env = env
         self.init_joint_pos = self.get_current_joint_positions()
-        print("self.init_joint_pos::")
-        print(self.init_joint_pos)
-        print("-----")
 
     def get_current_joint_positions(self) -> Optional[np.ndarray]:
         """
