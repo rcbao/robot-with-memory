@@ -55,6 +55,11 @@ class FetchService:
                     detail=detail,
                     location={"text": f"{name} is on the table.", "coords": TARGET_COORDINATES}
                 )
+            else:
+                self.memory_service.update_location(
+                    name=name,
+                    location={"text": f"{name} is on the table.", "coords": TARGET_COORDINATES}
+                )
             return True
 
         logger.error(f"Failed to fetch '{name}'.")
@@ -93,10 +98,6 @@ class FetchService:
     def handle_fetch(self, object_name: str, message_history: List[Dict[str, str]]):
         """
         Handle the fetch command by either fetching from memory or exploring the environment.
-
-        Args:
-            object_name (str): Name of the object to fetch.
-            message_history (list): List to keep track of message history.
         """
         if self.fetch_from_memory(object_name):
             return

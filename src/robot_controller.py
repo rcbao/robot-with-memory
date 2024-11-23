@@ -81,6 +81,11 @@ class RobotController:
                         detail=detail,
                         location=location
                     )
+                else:
+                    self.memory_service.update_location(
+                        name=name,
+                        location={"text": f"{name} is on the table.", "coords": TARGET_COORDINATES}
+                    )
                 message = location["text"]
                 self.message_history.append({"role": "assistant", "content": message})
                 found_in_sight = True
