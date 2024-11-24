@@ -6,7 +6,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 from services.location_oracle_service import Oracle
 from prompt_builder import PromptBuilder
-
+from constants import OPENAI_MODEL
 logger = setup_logger()
 
 load_dotenv()
@@ -14,7 +14,7 @@ load_dotenv()
 
 class VisionService:
     """
-    Service to handle fetching objects.
+    Service to handle vision-related tasks for object detection.
     """
     def __init__(self, oracle_service: Oracle, env):
         self.prompt_builder = PromptBuilder()
@@ -23,27 +23,41 @@ class VisionService:
         self.oracle_service = oracle_service
         self.env = env
 
-    def get_closest_match(self, object_name, object_names):
-        system_prompt = f"You are given an object name and a list of object names.  Your task is to find the cloest match in the list. If there is no match, return an empty string. If there is a match, return the object name ONLY."
-        user_prompt = f"Object name: {object_name} \n ------ \n List of Potential Object Names: {object_names} \n ----- \n Return the closest match."
+    def get_closest_match(self, object_name: str, object_names: List[str]) -> str:
+        system_prompt = (
+            "You are given an object name and a list of object names. "
+            "Your task is to find the closest match in the list. "
+            "If there is no match, return an empty string. "
+            "If there is a match, return the object name ONLY."
+        )
+        user_prompt = (
+            f"Object name: {object_name} \n"
+            f"------ \n"
+            f"List of Potential Object Names: {object_names} \n"
+            f"----- \n"
+            f"Return the closest match."
+        )
 
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
         ]
-        response = self.client.chat.completions.create(
-            model="gpt-4o",
-            messages=messages
-        )
-        response_text = response.choices[0].message.content.strip()
+        try:
+            response = self.client.chat.completions.create(
+                model=OPENAI_MODEL,  # Corrected model name
+                messages=messages
+            )
+            response_text = response.choices[0].message.content.strip()
 
-        if response_text:
-            response_text = response_text.lower()
-            return response_text
-        return ""
-        
-    def list_objects_in_scene_image(self, base64_image: str, view: str) -> list:
-
+            if response_text:
+                response_text = response_text.lower()
+                return response_text
+            return ""
+        except Exception as e:
+            logger.error(f"Error in get_closest_match: {e}")
+            return ""
+    
+    def list_objects_in_scene_image(self, base64_image: str, view: str) -> List[Dict]:
         # Create the message payload
         system_prompt, user_prompt = self.prompt_builder.build_image_parser_prompts()
         user_prompt = user_prompt.format(view=view)
@@ -58,83 +72,105 @@ class VisionService:
                 "content": [
                     {
                         "type": "text",
-                        "text": user_prompt.format(view=view),
+                        "text": user_prompt,
                     },
                     {
-                    "type": "image_url",
-                    "image_url": {
-                        "url":  f"data:image/jpeg;base64,{base64_image}"
+                        "type": "image_url",
+                        "image_url": {
+                            "url":  f"data:image/jpeg;base64,{base64_image}"
                         },
                     },
                 ],
             }
         ]
-        response = self.client.chat.completions.create(
-            model="gpt-4o",
-            messages=messages
-        )
-        response_text = response.choices[0].message.content.strip()
+        try:
+            response = self.client.chat.completions.create(
+                model=OPENAI_MODEL,  # Corrected model name
+                messages=messages
+            )
+            response_text = response.choices[0].message.content.strip()
 
-        response_text = self.prompt_builder.clean_up_json(response_text)
-        response = json.loads(response_text)
-        return response
+            response_text = self.prompt_builder.clean_up_json(response_text)
+            try:
+                response = json.loads(response_text)
+                return response
+            except json.JSONDecodeError:
+                logger.error("Failed to parse JSON from vision response.")
+                return []
+        except Exception as e:
+            logger.error(f"Error in list_objects_in_scene_image: {e}")
+            return []
 
-    def detect_object_from_camera_image(self, object_name: str, view: str) -> Optional[Dict]:
+    def detect_objects_from_camera_image(self, object_names: List[str], view: str) -> List[Dict]:
         """
-        Detect objects from the camera image and find a matching object.
+        Detect multiple objects from the camera image and find matching objects.
 
         Args:
-            object_name (str): Name of the object to find.
+            object_names (List[str]): List of object names to find.
+            view (str): Camera view direction.
 
         Returns:
-            dict or None: Matched object dictionary if found, else None.
+            List[Dict]: List of matched object dictionaries if found, else empty list.
         """
         encoded_image = save_camera_image_by_type(self.env, camera_type="front_camera")
         objects = self.list_objects_in_scene_image(encoded_image, view)
         logger.info(f"Detected objects in image: {objects}.")
 
-        return self.fuzzy_match_item(objects, object_name)
+        matched_objects = self.fuzzy_match_items(objects, object_names)
+        return matched_objects
 
-    def find_best_match_name(self, objects_in_view: List[Dict], object_name: str) -> str:
-        object_names = [obj["name"].lower() for obj in objects_in_view]
-        object_name = object_name.lower()
+    def find_best_match_names(self, objects_in_view: List[Dict], object_names: List[str]) -> Dict[str, str]:
+        """
+        Find the best matching names for a list of object names.
 
-        closest_match = self.get_closest_match(object_name, object_names)
+        Args:
+            objects_in_view (List[Dict]): List of objects detected in view.
+            object_names (List[str]): List of object names to match.
 
-        if closest_match:
-            logger.info(f"closest_match: {closest_match}.")
-            return closest_match
-        return ""
+        Returns:
+            Dict[str, str]: Mapping of original object names to their closest matches.
+        """
+        object_names_lower = [name.lower() for name in object_names]
+        object_detected_names = [obj["name"].lower() for obj in objects_in_view]
+        
+        closest_matches = {}
+        for name in object_names_lower:
+            closest_match = self.get_closest_match(name, object_detected_names)
+            if closest_match:
+                closest_matches[name] = closest_match
+            else:
+                closest_matches[name] = ""
+        return closest_matches
 
-    def validate_item_name(self, item_name: str):
+    def validate_item_name(self, item_name: str) -> bool:
         if item_name:
             valid_names = self.oracle_service.get_valid_item_names()
             valid_names = [name.lower() for name in valid_names]
             return item_name in valid_names
-        print("Name {item_name} is invalid.")
+        logger.warning("Provided item name is empty.")
         return False
 
-    def fuzzy_match_item(self, items_in_view: List[Dict], item_name: str) -> Optional[Dict]:
+    def fuzzy_match_items(self, items_in_view: List[Dict], item_names: List[str]) -> List[Dict]:
         """
-        Perform fuzzy matching to find the best match for the item name.
+        Perform fuzzy matching to find the best matches for multiple item names.
 
         Args:
             items_in_view (List[Dict]): List of items detected in view.
-            item_name (str): Name of the item to match.
+            item_names (List[str]): List of item names to match.
 
         Returns:
-            dict or None: Matched item dictionary if a match is found, else None.
+            List[Dict]: List of matched item dictionaries if found, else empty list.
         """
-        matched_name = self.find_best_match_name(items_in_view, item_name)
-        name_valid = self.validate_item_name(matched_name)
-        
-        if name_valid:
-            matched_items = [item for item in items_in_view if item["name"] == matched_name]
-            if matched_items:
-                top_match = matched_items[0]
-                logger.info(f"Fuzzy matched '{item_name}' to '{matched_name}'.")
-                return top_match
+        closest_matches = self.find_best_match_names(items_in_view, item_names)
+        matched_items = []
 
-        logger.warning(f"No fuzzy match found for '{item_name}'.")
-        return None
+        for original_name, matched_name in closest_matches.items():
+            if self.validate_item_name(matched_name):
+                matched = next((item for item in items_in_view if item["name"].lower() == matched_name), None)
+                if matched:
+                    logger.info(f"Fuzzy matched '{original_name}' to '{matched_name}'.")
+                    matched_items.append(matched)
+            else:
+                logger.warning(f"No valid match found for '{original_name}'.")
 
+        return matched_items

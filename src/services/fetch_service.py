@@ -17,7 +17,7 @@ class FetchService:
     """
     Service to handle fetching objects.
     """
-    def __init__(self, oracle_service: Oracle, memory_service: MemoryService, lang_service, vision_service, env, rotator: RobotRotator):
+    def __init__(self, oracle_service: Oracle, memory_service: MemoryService, lang_service, vision_service: VisionService, env, rotator: RobotRotator):
         self.oracle_service = oracle_service
         self.memory_service = memory_service
         self.lang_service = lang_service
@@ -25,13 +25,12 @@ class FetchService:
         self.env = env
         self.rotator = rotator
 
-
     def fetch_item(self, item: dict) -> bool:
         """
-        Attempt to fetch the object by its name in environment.
+        Attempt to fetch a single object by its details in the environment.
 
         Args:
-            name (str): Name of the object to fetch.
+            item (dict): Object details including name and location.
 
         Returns:
             bool: True if the object was fetched successfully, False otherwise.
@@ -71,56 +70,102 @@ class FetchService:
 
     def fetch_from_camera_view(self, name: str, view: str) -> bool:
         """
-        Fetch an object from camera view
-        """
-        matched_item = self.vision_service.detect_object_from_camera_image(name, view)
+        Fetch an object from a specific camera view.
 
-        if not matched_item:
-            logger.warning(f"No match for item '{name}' in view.")
+        Args:
+            name (str): Name of the object to fetch.
+            view (str): Camera view direction.
+
+        Returns:
+            bool: True if the object was fetched successfully, False otherwise.
+        """
+        # Pass a list containing the single name
+        matched_items = self.vision_service.detect_objects_from_camera_image([name], view)
+
+        if not matched_items:
+            logger.warning(f"No match for item '{name}' in view '{view}'.")
             return False
 
-        return self.fetch_item(matched_item)
+        success = False
+        for matched_item in matched_items:
+            if isinstance(matched_item, dict):
+                if self.fetch_item(matched_item):
+                    success = True
+            else:
+                logger.error(f"Expected dict in matched_items, got {type(matched_item)}.")
+        return success
 
-    def fetch_from_memory(self, object_name: str) -> bool:
+    def fetch_from_memory(self, object_names: List[str]) -> List[str]:
         """
-        Fetches an object from memory and places it on the table if coordinates are available.
+        Fetch multiple objects from memory and place them on the table if coordinates are available.
+
+        Args:
+            object_names (List[str]): List of object names to fetch.
+
+        Returns:
+            List[str]: List of successfully fetched object names.
         """
-        item = self.memory_service.get_object(object_name)
-        
-        if not item:
-            logger.info(f"Object '{object_name}' not found in memory.")
-            return False
+        fetched_objects = []
+        for name in object_names:
+            item = self.memory_service.get_object(name)
+            if not item:
+                logger.info(f"Object '{name}' not found in memory.")
+                continue
 
-        coords = item.get("location", {}).get("coords")
-        if not coords:
-            logger.warning(f"Memory entry for '{object_name}' does not contain coordinates.")
-            return False
-        
-        return self.fetch_item(item)
+            coords = item.get("location", {}).get("coords")
+            if not coords:
+                logger.warning(f"Memory entry for '{name}' does not contain coordinates.")
+                continue
 
+            fetched = self.fetch_item(item)
+            if fetched:
+                fetched_objects.append(name)
 
-    def handle_fetch(self, object_name: str, message_history: List[Dict[str, str]]):
+        return fetched_objects
+
+    def handle_fetch(self, object_names: List[str], message_history: List[Dict[str, str]]):
         """
         Handle the fetch command by either fetching from memory or exploring the environment.
+
+        Args:
+            object_names (List[str]): List of object names to fetch.
+            message_history (list): List to keep track of message history.
         """
-        if self.fetch_from_memory(object_name):
-            return
+        # Attempt to fetch all objects from memory at once
+        fetched_objects = self.fetch_from_memory(object_names)
+        not_fetched_objects = [name for name in object_names if name not in fetched_objects]
 
-        item_not_in_memory_message = f"I could not locate '{object_name}' in memory. "
-        logger.info(item_not_in_memory_message)
-        
-        for view in VIEWS:
-            logger.info(f"Rotating to '{view}' view.")
-            self.rotator.rotate_robot_to_view(view)
-            if self.fetch_from_camera_view(object_name, view):
-                item_found_message = f"After scanning, I have successfully found {object_name} in my {view} view. "
+        if fetched_objects:
+            message = f"Successfully fetched: {', '.join(fetched_objects)} from memory."
+            logger.info(message)
+            message_history.append({"role": "assistant", "content": message})
+            print(message)
 
-                full_message = {"role": "assistant", "content": f"{item_not_in_memory_message} {item_found_message}"}
-                message_history.append(full_message)
-                return
+        if not_fetched_objects:
+            item_not_in_memory_message = f"I could not locate the following objects in memory: {', '.join(not_fetched_objects)}. Scanning the environment..."
+            logger.info(item_not_in_memory_message)
+            message_history.append({"role": "assistant", "content": item_not_in_memory_message})
+            print(item_not_in_memory_message)
 
-        item_not_found_message = "I could not find the object after scanning the environment."
-        logger.info(item_not_found_message)
-        
-        full_message = {"role": "assistant", "content": f"{item_not_in_memory_message} {item_not_found_message}"}
-        message_history.append(full_message)
+            for view in VIEWS:
+                logger.info(f"Rotating to '{view}' view.")
+                self.rotator.rotate_robot_to_view(view)
+                for name in not_fetched_objects.copy():
+                    if self.fetch_from_camera_view(name, view):
+                        item_found_message = f"Found and fetched {name} in the {view} view."
+                        message_history.append({"role": "assistant", "content": item_found_message})
+                        print(f"> {item_found_message}")
+                        fetched_objects.append(name)
+                        not_fetched_objects.remove(name)
+
+            if fetched_objects:
+                message = f"Successfully fetched: {', '.join(fetched_objects)}."
+                logger.info(message)
+                message_history.append({"role": "assistant", "content": message})
+                print(message)
+
+            if not_fetched_objects:
+                item_not_found_message = f"I couldn't find the following objects after scanning: {', '.join(not_fetched_objects)}."
+                logger.info(item_not_found_message)
+                message_history.append({"role": "assistant", "content": item_not_found_message})
+                print(item_not_found_message)

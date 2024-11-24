@@ -7,9 +7,10 @@ from services.vision_service import VisionService
 from utils.logger import setup_logger
 from utils.robot_rotator import RobotRotator
 from utils.init_env import init_env
-from constants import VIEWS
+from constants import VIEWS, TARGET_COORDINATES
 
 logger = setup_logger()
+
 
 class RobotController:
     """
@@ -41,63 +42,77 @@ class RobotController:
         )
         self.message_history: List[Dict[str, str]] = []
 
-    def handle_recall(self, object_name: str):
+    def handle_recall(self, object_names: List[str]):
         """
-        Handle the recall command by first rotating and observing the environment 
-        in three directions to locate the object, and then checking memory.
+        Handle the recall command by rotating and observing the environment
+        in all directions to locate all requested objects.
 
         Args:
-            object_name (str): Name of the object to recall.
+            object_names (List[str]): List of object names to recall.
         """
-        obj = self.memory_service.get_object(object_name)
-        if obj:
-            message = obj.get("location", {}).get("text", "<Location unknown>")
-            logger.info(f"Recall: {message}")
-            self.message_history.append({"role": "assistant", "content": message})
-            print(message)
-            return
+        objects_to_recall = [name.lower() for name in object_names]
+        recalled_objects = []
+        not_found_objects = objects_to_recall.copy()
 
-        found_in_sight = False
+        logger.info(f"Attempting to recall objects: {objects_to_recall}")
 
-        print(f"> Object not found in memory. Scanning the environment to find the {object_name}...")
+        print(f"> Scanning the environment to find the requested objects: {', '.join(objects_to_recall)}")
 
         for view in VIEWS:
             logger.info(f"Rotating to '{view}' view.")
             self.rotator.rotate_robot_to_view(view)
-            item = self.vision_service.detect_object_from_camera_image(object_name, view)
+            detected_items = self.vision_service.detect_objects_from_camera_image(objects_to_recall, view)
 
-            if item:
-                name, detail = item["name"], item["detail"]
-                location = item.get("location", {})
+            if detected_items:
+                for item in detected_items:
+                    name, detail = item["name"].lower(), item["detail"]
+                    location = item.get("location", {})
 
-                item_coordinates = self.oracle_service.get_object_coordinates(name)
+                    item_coordinates = self.oracle_service.get_object_coordinates(name)
 
-                location["coords"] = item_coordinates
+                    location["coords"] = item_coordinates
 
-                existing_object = self.memory_service.get_object(name)
-                if not existing_object:
-                    self.memory_service.add_object(
-                        name=name,
-                        detail=detail,
-                        location=location
-                    )
-                else:
-                    self.memory_service.update_location(
-                        name=name,
-                        location={"text": f"{name} is on the table.", "coords": TARGET_COORDINATES}
-                    )
-                message = location["text"]
-                self.message_history.append({"role": "assistant", "content": message})
-                found_in_sight = True
-                print(message)
-                break
+                    existing_object = self.memory_service.get_object(name)
+                    if not existing_object:
+                        self.memory_service.add_object(
+                            name=name,
+                            detail=detail,
+                            location=location
+                        )
+                    else:
+                        self.memory_service.update_location(
+                            name=name,
+                            new_location={"text": f"{name} is on the table.", "coords": TARGET_COORDINATES}
+                        )
+                    message = location["text"]
+                    self.message_history.append({"role": "assistant", "content": message})
+                    print(f"> {message}")
+                    recalled_objects.append(name)
+                    if name in not_found_objects:
+                        not_found_objects.remove(name)
 
-        if not found_in_sight:
-            message = f"I don't have any record of the {object_name}."
+        if recalled_objects:
+            logger.info(f"Recalled objects: {recalled_objects}")
+            message = f"Successfully recalled: {', '.join(recalled_objects)}."
+            self.message_history.append({"role": "assistant", "content": message})
+            print(message)
+
+        if not_found_objects:
+            message = f"I couldn't find the following objects: {', '.join(not_found_objects)}."
             logger.info(f"Recall: {message}")
             self.message_history.append({"role": "assistant", "content": message})
             print(message)
 
+    def handle_fetch(self, object_names: List[str], message_history: List[Dict[str, str]]):
+        """
+        Handle the fetch command by either fetching from memory or exploring the environment.
+
+        Args:
+            object_names (List[str]): List of object names to fetch.
+            message_history (list): List to keep track of message history.
+        """
+        # Delegate the fetch handling to fetch_service
+        self.fetch_service.handle_fetch(object_names, message_history)
 
     def process_command(self, user_input: str):
         """
@@ -106,7 +121,7 @@ class RobotController:
         Args:
             user_input (str): The input string from the user.
         """
-        relevancy, action, object_name, detail = self.lang_service.parse_user_input(user_input, self.message_history)
+        relevancy, action, object_names, detail = self.lang_service.parse_user_input(user_input, self.message_history)
 
         if not action or not isinstance(action, str):
             response = "Sorry, I didn't understand that command."
@@ -114,12 +129,12 @@ class RobotController:
             self.message_history.append({"role": "assistant", "content": response})
             return
 
-        if relevancy and object_name:
+        if relevancy and object_names:
             action_lower = action.lower()
             if action_lower == 'fetch':
-                self.fetch_service.handle_fetch(object_name, self.message_history)
+                self.handle_fetch(object_names, self.message_history)
             elif action_lower == 'recall':
-                self.handle_recall(object_name)
+                self.handle_recall(object_names)
             else:
                 response = self.lang_service.write_generic_response(user_input, self.message_history)
                 response = response or "Sorry, I couldn't understand your request."

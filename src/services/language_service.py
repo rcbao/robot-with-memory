@@ -1,5 +1,5 @@
 # language_processor.py
-
+from typing import Tuple, Optional, List, Dict
 import os
 import json
 from openai import OpenAI
@@ -44,9 +44,9 @@ class LanguageService:
             print(f"Error generating response: {e}")
             return ""
 
-    def parse_user_input(self, user_command: str, message_history: list) -> Tuple[bool, Optional[str], Optional[str], Optional[str]]:
+    def parse_user_input(self, user_command: str, message_history: list) -> Tuple[bool, Optional[str], Optional[List[str]], Optional[str]]:
         """
-        Interpret the user prompt to extract action, object name, and details using LLM
+        Interpret the user prompt to extract action, object names, and details using LLM
         """
         messages = self.prompt_builder.build_input_parser_messages(user_command, message_history)
 
@@ -65,10 +65,14 @@ class LanguageService:
 
                 relevancy = parsed.get("relevancy", False)
                 action = parsed.get("action")
-                object_name = parsed.get("object_name")
+                object_names = parsed.get("object_names", [])
                 detail = parsed.get("detail")
 
-                return relevancy, action, object_name, detail
+                # Ensure object_names is a list
+                if not isinstance(object_names, list):
+                    object_names = [object_names] if object_names else []
+
+                return relevancy, action, object_names, detail
             except json.JSONDecodeError as e:
                 print(f"Error decoding JSON response: {e}")
                 return fallback_response
