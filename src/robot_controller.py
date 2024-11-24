@@ -95,13 +95,15 @@ class RobotController:
                         recalled_objects.append(name)
 
                         message = location["text"]
-                        print(f"> {message}")
+                        logger.info(f"> {message}")
                         recall_messages.append(message)
                         
                     if name in not_found_objects:
                         not_found_objects.remove(name)
                     
                     break
+                
+        self.rotator.rotate_robot_to_view("left")
 
         if recalled_objects:
             logger.info(f"Recalled objects: {recalled_objects}")
@@ -116,7 +118,7 @@ class RobotController:
             message = f"I couldn't find the following objects: {', '.join(not_found_objects)}."
             logger.info(f"Recall: {message}")
             self.message_history.append({"role": "assistant", "content": message})
-            print(message)
+            print(f"> {message}")
 
     def handle_fetch(self, object_names: List[str], message_history: List[Dict[str, str]]):
         """

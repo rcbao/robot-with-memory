@@ -1,13 +1,15 @@
+import logging
+
+DEMO = True
+if DEMO:
+    logging.disable(logging.CRITICAL)
+
 import sys
 from utils.logger import setup_logger
 from robot_controller import RobotController
-import logging
 import warnings
 
-RUNNING_DEMO = True
 
-if RUNNING_DEMO:
-    logging.disable(logging.CRITICAL)
 
 logger = setup_logger()
 warnings.filterwarnings("ignore", category=UserWarning)

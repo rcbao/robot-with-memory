@@ -65,26 +65,24 @@ class RobotRotator:
         
         Args:
             view (str): The desired view to rotate the robot to. 
-                        Options are "left", "front", "right".
+                        Options are "left", "right".
         
         Example usage:
             rotator = RobotRotator(env)
-            rotator.rotate_robot_to_view("left")    # Rotate to -60 degrees
-            rotator.rotate_robot_to_view("front")  # Rotate to 0 degrees
-            rotator.rotate_robot_to_view("right")   # Rotate to 60 degrees
+            rotator.rotate_robot_to_view("left")    # Rotate to -65 degrees
+            rotator.rotate_robot_to_view("right")   # Rotate to 65 degrees
         """
 
         # Define target angles for each view in degrees
         target_angles = {
-            "left": 70,
-            "front": -70,
-            "right": -70
+            "left": 65,
+            "right": -65
         }
 
         # Retrieve the target angle based on the view
         angle = target_angles.get(view.lower())
         if angle is None:
-            logging.error(f"Unknown view: '{view}'. Valid options are 'left', 'front', 'right'.")
+            logging.error(f"Unknown view: '{view}'. Valid options are 'left', 'right'.")
             return
 
         # Determine the direction and number of steps required

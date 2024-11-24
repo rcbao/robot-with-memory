@@ -152,7 +152,7 @@ class FetchService:
             item_not_in_memory_message = f"I could not locate the following objects in memory: {', '.join(not_fetched_objects)}. Scanning the environment..."
             logger.info(item_not_in_memory_message)
             message_history.append({"role": "assistant", "content": item_not_in_memory_message})
-            print(item_not_in_memory_message)
+            print(f"> {item_not_in_memory_message}")
 
             for view in VIEWS:
                 logger.info(f"Rotating to '{view}' view.")
@@ -164,6 +164,7 @@ class FetchService:
                         logger.info(f"> {item_found_message}")
                         fetched_objects.append(name)
                         not_fetched_objects.remove(name)
+            self.rotator.rotate_robot_to_view("left")
 
             if fetched_objects:
                 message = f"Successfully fetched: {', '.join(fetched_objects)}."

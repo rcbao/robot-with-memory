@@ -26,19 +26,19 @@ USING_HQ_CAMERA = True
 
 CAMERA_CONFIGS_HIGH_QUALITY = {
     "sensor_configs": {
-        "width": 1920, "height": 1088, "shader_pack": "rt-fast"
+        "width": 1920, "height": 1080, "shader_pack": "rt-fast"
     },
-    "human_render_camera_configs": {"width": 1088, "height": 1088, "shader_pack": "rt-fast"},
+    "human_render_camera_configs": {"width": 1080, "height": 1080, "shader_pack": "rt-fast"},
     "viewer_camera_configs": {"fov": 1},
     "enable_shadow": True,
 }
 
 CAMERA_CONFIG_DEFAULT = {
-    "sensor_configs": {"width": 1920, "height": 1088, "shader_pack": "default"},
-    "human_render_camera_configs": {"width": 1088, "height": 1088, "shader_pack": "default"},
+    "sensor_configs": {"width": 1920, "height": 1080, "shader_pack": "default"},
+    "human_render_camera_configs": {"width": 1080, "height": 1080, "shader_pack": "default"},
     "viewer_camera_configs": {"fov": 1},
     "enable_shadow": True,
 }
 
-VIEWS = ["left", "front", "right"]
+VIEWS = ["left", "right", "right"]
 TARGET_COORDINATES = [0.05, 0.05, 0]
