@@ -15,7 +15,10 @@
     {
         "name": "rubiks_cube",
         "detail": "A Rubik's Cube",
-        "aliases": ["rubik's cube", "Rubik's cube"],
+        "aliases": [
+            "rubik's cube",
+            "Rubik's cube"
+        ],
         "location": {
             "text": "left shelf",
             "coords": [
@@ -26,9 +29,11 @@
         }
     },
     {
-        "name": "025_mug",
-        "detail": "A black mug",
-        "aliases": ["mug", "cup"],
+        "name": "softball",
+        "detail": "A yellow softball",
+        "aliases": [
+            "softball"
+        ],
         "location": {
             "text": "right shelf",
             "coords": [
