@@ -72,7 +72,7 @@ class PandaWristCam(Panda):
                     ),
                     width=640,
                     height=480,
-                    fov=np.pi / 3, 
+                    fov=np.pi / 4, 
                     near=0.05,
                     far=200,
                     mount=self.robot.links_map["panda_link1"],
