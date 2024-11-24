@@ -33,8 +33,6 @@ class MemoryService:
                 return
 
         # Add new object to memory
-        print("=====")
-        print(self.memory)
         self.memory.append({
             "name": name,
             "detail": detail,

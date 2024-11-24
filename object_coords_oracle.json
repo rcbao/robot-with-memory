@@ -26,9 +26,9 @@
         }
     },
     {
-        "name": "toy_airplane",
-        "detail": "A toy airplane",
-        "aliases": ["toy airplane"],
+        "name": "025_mug",
+        "detail": "A black mug",
+        "aliases": ["mug", "cup"],
         "location": {
             "text": "right shelf",
             "coords": [
