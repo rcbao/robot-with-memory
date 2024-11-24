@@ -35,7 +35,7 @@ print("Absolute path of PandaWristCam:", path)
 ```
 
 The path will look similar to this, with additional folders in front of lib: 
-**`~/lib/python{version}/site-packages/mani_skill/agents/robots/panda/panda_wristcam.py`**
+**`~/lib/python{version}/site-packages/mani_skill/agents/robots/panda/panda_wristcam.py` or `~/.conda/envs/maniskill_env/lib/python3.1/site-packages/mani_skill/agents/robots/panda/panda_wristcam.py`**
 
 Replace its contents with this code:
 
