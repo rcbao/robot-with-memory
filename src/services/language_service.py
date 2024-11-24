@@ -157,9 +157,46 @@ class LanguageService:
         except Exception as e:
             print(f"Error in list_objects_in_scene_image: {e}")
             return []
+    
+    def rewrite_response(self, input_text: str) -> Optional[str]:
+        """
+        Rewrite the input text to be grammatically correct and friendly using LLM.
+
+        Args:
+            input_text (str): The text to rewrite.
+            message_history (list): List of previous messages for context.
+
+        Returns:
+            str or None: Rewritten text if successful, or None if an error occurred.
+        """
+        # Build rewrite messages using PromptBuilder
+        system_prompt = (
+            "You are a helpful and friendly assistant. Your task is to rewrite a response to be grammatically correct and friendly."
+        )
+        user_prompt = (
+            f"Input text: {input_text} \n"
+            f"------ \n"
+            f"Rewrite the above response."
+        )
+
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+
+        # Get the response from the LLM
+        response_content = self.get_llm_response(
+            messages=messages,
+            max_tokens=200,
+            temperature=0.7
+        )
+
+        if response_content:
+            # Clean up the response if needed
+            response_content = response_content.strip()
+            return response_content
+        else:
+            return None
 
 
-if __name__ == "__main__":
-    lang = LanguageService()
-    output = lang.parse_user_input("what did we do so far?", [])
-    print(output)
+

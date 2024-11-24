@@ -4,15 +4,13 @@ from robot_controller import RobotController
 import logging
 import warnings
 
-logger = setup_logger()
-
-RUNNING_DEMO = False
-
-warnings.filterwarnings("ignore", category=UserWarning)
+RUNNING_DEMO = True
 
 if RUNNING_DEMO:
     logging.disable(logging.CRITICAL)
-    
+
+logger = setup_logger()
+warnings.filterwarnings("ignore", category=UserWarning)
 
 
 def display_welcome_message():

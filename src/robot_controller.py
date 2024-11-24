@@ -44,6 +44,9 @@ class RobotController:
         )
         self.message_history: List[Dict[str, str]] = []
 
+    def rewrite_response(self, input_text: str):
+        return self.lang_service.rewrite_response(input_text)
+
     def handle_recall(self, object_names: List[str]):
         """
         Handle the recall command by rotating and observing the environment
@@ -104,6 +107,8 @@ class RobotController:
             logger.info(f"Recalled objects: {recalled_objects}")
             full_recall_message = f"Successfully recalled: {', '.join(recalled_objects)}. {''.join(recall_messages)}"
             self.message_history.append({"role": "assistant", "content": full_recall_message})
+
+            full_recall_message = self.rewrite_response(full_recall_message)
             print(full_recall_message)
             return
 
@@ -148,11 +153,15 @@ class RobotController:
             else:
                 response = self.lang_service.write_generic_response(user_input, self.message_history)
                 response = response or "Sorry, I couldn't understand your request."
+
+                response = self.rewrite_response(response)
                 print(response)
                 self.message_history.append({"role": "assistant", "content": response})
         else:
             response = self.lang_service.write_generic_response(user_input, self.message_history)
             response = response or "Sorry, I couldn't understand your request."
+
+            response = self.rewrite_response(response)
             print(response)
             self.message_history.append({"role": "assistant", "content": response})
 

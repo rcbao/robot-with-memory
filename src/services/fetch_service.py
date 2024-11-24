@@ -147,7 +147,6 @@ class FetchService:
             message = f"Successfully fetched: {', '.join(fetched_objects)} from memory."
             logger.info(message)
             message_history.append({"role": "assistant", "content": message})
-            print(message)
 
         if not_fetched_objects:
             item_not_in_memory_message = f"I could not locate the following objects in memory: {', '.join(not_fetched_objects)}. Scanning the environment..."
@@ -162,7 +161,7 @@ class FetchService:
                     if self.fetch_from_camera_view(name, view):
                         item_found_message = f"Found and fetched {name} in the {view} view."
                         message_history.append({"role": "assistant", "content": item_found_message})
-                        print(f"> {item_found_message}")
+                        logger.info(f"> {item_found_message}")
                         fetched_objects.append(name)
                         not_fetched_objects.remove(name)
 
@@ -170,7 +169,6 @@ class FetchService:
                 message = f"Successfully fetched: {', '.join(fetched_objects)}."
                 logger.info(message)
                 message_history.append({"role": "assistant", "content": message})
-                print(message)
 
             if not_fetched_objects:
                 item_not_found_message = f"I couldn't find the following objects after scanning: {', '.join(not_fetched_objects)}."
