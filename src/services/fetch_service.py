@@ -40,6 +40,10 @@ class FetchService:
         target_object = getattr(self.env, name, None)
 
         if not target_object:
+            cleaned_name = name.lower().replace("'", "").replace(" ", "_")
+            target_object = getattr(self.env, cleaned_name, None)
+
+        if not target_object:
             logger.error(f"Object '{name}' not found in the environment.")
             return False
 
@@ -58,7 +62,7 @@ class FetchService:
             else:
                 self.memory_service.update_location(
                     name=name,
-                    location={"text": f"{name} is on the table.", "coords": TARGET_COORDINATES}
+                    new_location={"text": f"{name} is on the table.", "coords": TARGET_COORDINATES}
                 )
             return True
 

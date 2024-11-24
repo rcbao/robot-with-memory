@@ -147,9 +147,9 @@ class MemoryRobotEnv(BaseEnv):
 
         ## Shelf 2 Objects ##
 
-        self.tomato_soup = add_object_to_scene_ycb(
+        self.toy_airplane = add_object_to_scene_ycb(
             table_scene=self.table_scene,
-            model_id="005_tomato_soup_can",
+            model_id="072-a_toy_airplane",
             position=[-0.40, -0.345, 0.24]    
         )
 

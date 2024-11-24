@@ -57,5 +57,13 @@ class Oracle:
         """
         if not self.data:
             return []
+        res = []
+
+        for item in self.data:
+            name = item["name"]
+            aliases = item["aliases"]
+
+            res.extend(aliases)
+            res.append(name)
             
-        return [item["name"] for item in self.data]
+        return res

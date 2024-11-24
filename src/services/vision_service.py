@@ -4,7 +4,6 @@ from utils.logger import setup_logger
 from utils.camera_utils import save_camera_image_by_type
 from openai import OpenAI
 from dotenv import load_dotenv
-from difflib import get_close_matches
 from services.location_oracle_service import Oracle
 from prompt_builder import PromptBuilder
 
@@ -23,6 +22,25 @@ class VisionService:
         
         self.oracle_service = oracle_service
         self.env = env
+
+    def get_closest_match(self, object_name, object_names):
+        system_prompt = f"You are given an object name and a list of object names.  Your task is to find the cloest match in the list. If there is no match, return an empty string. If there is a match, return the object name ONLY."
+        user_prompt = f"Object name: {object_name} \n ------ \n List of Potential Object Names: {object_names} \n ----- \n Return the closest match."
+
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+        response = self.client.chat.completions.create(
+            model="gpt-4o",
+            messages=messages
+        )
+        response_text = response.choices[0].message.content.strip()
+
+        if response_text:
+            response_text = response_text.lower()
+            return response_text
+        return ""
         
     def list_objects_in_scene_image(self, base64_image: str, view: str) -> list:
 
@@ -77,15 +95,15 @@ class VisionService:
 
         return self.fuzzy_match_item(objects, object_name)
 
-    def find_best_match_name(self, objects_in_view: List[Dict], object_name: str) -> "":
-        object_names = [obj["name"] for obj in objects_in_view]
+    def find_best_match_name(self, objects_in_view: List[Dict], object_name: str) -> str:
+        object_names = [obj["name"].lower() for obj in objects_in_view]
         object_name = object_name.lower()
 
-        matches = get_close_matches(object_name, object_names, n=1, cutoff=0.6)
+        closest_match = self.get_closest_match(object_name, object_names)
 
-        if matches:
-            first_match = matches[0]
-            return first_match
+        if closest_match:
+            logger.info(f"closest_match: {closest_match}.")
+            return closest_match
         return ""
 
     def validate_item_name(self, item_name: str):
@@ -93,6 +111,7 @@ class VisionService:
             valid_names = self.oracle_service.get_valid_item_names()
             valid_names = [name.lower() for name in valid_names]
             return item_name in valid_names
+        print("Name {item_name} is invalid.")
         return False
 
     def fuzzy_match_item(self, items_in_view: List[Dict], item_name: str) -> Optional[Dict]:
@@ -118,3 +137,4 @@ class VisionService:
 
         logger.warning(f"No fuzzy match found for '{item_name}'.")
         return None
+
