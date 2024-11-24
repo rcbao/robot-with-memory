@@ -119,9 +119,9 @@ class MemoryRobotEnv(BaseEnv):
 
         ## Shelf 1 Objects ##
 
-        self.pear = add_object_to_scene_ycb(
+        self.rubiks_cube = add_object_to_scene_ycb(
             table_scene=self.table_scene,
-            model_id="016_pear",
+            model_id="077_rubiks_cube",
             position=[-0.40, 0.345, 0.22]
         )
 

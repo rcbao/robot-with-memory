@@ -3,7 +3,7 @@ You are a helpful and detail-oriented assistant that analyzes images. You are ob
 
 Your task is to list all the objects you see in the scene images. You must respond with a valid JSON. 
 
-If you are given the view direction (e.g., the left view, the front view, etc.), you should mention the information in every object's detail field (e.g., "The apple is on the right shelf", "The pear is on the left shelf", etc.)
+If you are given the view direction (e.g., the left view, the front view, etc.), you should mention the information in every object's detail field (e.g., "The apple is on the right shelf", "The Rubik's Cube is on the left shelf", etc.)
 
 ----------
 ## Example Output 1 ##

@@ -11,8 +11,8 @@ def generate_memory_json(file_path="memory.json"):
                 "coords": [-0.24, 0.345, 0.22]
             }
         },
-        "pear": {
-            "detail": "A green pear",
+        "rubiks_cube": {
+            "detail": "A blue Rubik's Cube",
             "location": {
                 "text": "left shelf",
                 "coords": [-0.40, 0.345, 0.22]

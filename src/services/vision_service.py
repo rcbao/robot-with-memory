@@ -30,8 +30,6 @@ class VisionService:
         system_prompt, user_prompt = self.prompt_builder.build_image_parser_prompts()
         user_prompt = user_prompt.format(view=view)
 
-        print("user prompt::")
-        print(user_prompt)
         messages = [
             {
                 "role": "system",

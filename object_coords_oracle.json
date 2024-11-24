@@ -12,8 +12,8 @@
         }
     },
     {
-        "name": "pear",
-        "detail": "A green pear",
+        "name": "rubiks_cube",
+        "detail": "A Rubik's Cube",
         "location": {
             "text": "left shelf",
             "coords": [

@@ -88,7 +88,7 @@ class RobotRotator:
             return
 
         # Determine the direction and number of steps required
-        step_size_degrees = 3  # Degrees per step
+        step_size_degrees = 2  # Degrees per step
         max_steps = int(abs(angle) / step_size_degrees)  # Total steps to reach target angle
         step_direction = 1 if angle > 0 else -1  # 1 for left, -1 for right
 

@@ -10,7 +10,7 @@ GENERIC_RESPONSE_PROMPT = f"""Your task is to write a response to the above user
 ## Example Output ## So far, I have fetched a banana and an apple on your request. I also answered questions about the apple's current location. Let me know if you need anything else! ##
 
 ## Example Input ## What fruits did I ask you to fetch?  ##
-## Example Output ## You have asked me to fetch a pear and an apple. I have placed them both on the table. ##
+## Example Output ## You have asked me to fetch a Rubik's cube and an apple. I have placed them both on the table. ##
 ----------
 Answer in a friendly manner.
 """
