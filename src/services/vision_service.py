@@ -1,3 +1,5 @@
+# vision_service.py
+
 import json
 from typing import Optional, Dict, List
 from utils.logger import setup_logger
@@ -27,6 +29,9 @@ class VisionService:
         system_prompt = (
             "You are given an object name and a list of object names. "
             "Your task is to find the closest match in the list. "
+            "You should match objects both literally and conceptually. "
+            "Example 1: Object name: banana --- List of Potential Object Names:  banana, toy ## Output: banana"
+            "Example 2: Object name: fruit --- List of Potential Object Names:  grape, toy ## Output: grape"
             "If there is no match, return an empty string. "
             "If there is a match, return the object name ONLY."
         )
@@ -44,7 +49,7 @@ class VisionService:
         ]
         try:
             response = self.client.chat.completions.create(
-                model=OPENAI_MODEL,  # Corrected model name
+                model=OPENAI_MODEL,
                 messages=messages
             )
             response_text = response.choices[0].message.content.strip()
@@ -75,9 +80,9 @@ class VisionService:
                         "text": user_prompt,
                     },
                     {
-                        "type": "image_url",
-                        "image_url": {
-                            "url":  f"data:image/jpeg;base64,{base64_image}"
+                    "type": "image_url",
+                    "image_url": {
+                        "url":  f"data:image/jpeg;base64,{base64_image}"
                         },
                     },
                 ],
@@ -85,7 +90,7 @@ class VisionService:
         ]
         try:
             response = self.client.chat.completions.create(
-                model=OPENAI_MODEL,  # Corrected model name
+                model=OPENAI_MODEL,
                 messages=messages
             )
             response_text = response.choices[0].message.content.strip()
@@ -140,6 +145,8 @@ class VisionService:
                 closest_matches[name] = closest_match
             else:
                 closest_matches[name] = ""
+        logger.info("closest_matches:: ")
+        logger.info(closest_matches)
         return closest_matches
 
     def validate_item_name(self, item_name: str) -> bool:

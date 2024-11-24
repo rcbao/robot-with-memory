@@ -1,3 +1,5 @@
+# robot_controller.py
+
 from typing import List, Dict
 from services.location_oracle_service import Oracle
 from services.memory_service import MemoryService
@@ -54,6 +56,8 @@ class RobotController:
         recalled_objects = []
         not_found_objects = objects_to_recall.copy()
 
+        recall_messages = []
+
         logger.info(f"Attempting to recall objects: {objects_to_recall}")
 
         print(f"> Scanning the environment to find the requested objects: {', '.join(objects_to_recall)}")
@@ -68,34 +72,40 @@ class RobotController:
                     name, detail = item["name"].lower(), item["detail"]
                     location = item.get("location", {})
 
-                    item_coordinates = self.oracle_service.get_object_coordinates(name)
+                    if name not in recalled_objects:
+                        item_coordinates = self.oracle_service.get_object_coordinates(name)
 
-                    location["coords"] = item_coordinates
+                        location["coords"] = item_coordinates
 
-                    existing_object = self.memory_service.get_object(name)
-                    if not existing_object:
-                        self.memory_service.add_object(
-                            name=name,
-                            detail=detail,
-                            location=location
-                        )
-                    else:
-                        self.memory_service.update_location(
-                            name=name,
-                            new_location={"text": f"{name} is on the table.", "coords": TARGET_COORDINATES}
-                        )
-                    message = location["text"]
-                    self.message_history.append({"role": "assistant", "content": message})
-                    print(f"> {message}")
-                    recalled_objects.append(name)
+                        existing_object = self.memory_service.get_object(name)
+                        if not existing_object:
+                            self.memory_service.add_object(
+                                name=name,
+                                detail=detail,
+                                location=location
+                            )
+                        else:
+                            self.memory_service.update_location(
+                                name=name,
+                                new_location=location
+                            )
+                        recalled_objects.append(name)
+
+                        message = location["text"]
+                        print(f"> {message}")
+                        recall_messages.append(message)
+                        
                     if name in not_found_objects:
                         not_found_objects.remove(name)
+                    
+                    break
 
         if recalled_objects:
             logger.info(f"Recalled objects: {recalled_objects}")
-            message = f"Successfully recalled: {', '.join(recalled_objects)}."
-            self.message_history.append({"role": "assistant", "content": message})
-            print(message)
+            full_recall_message = f"Successfully recalled: {', '.join(recalled_objects)}. {''.join(recall_messages)}"
+            self.message_history.append({"role": "assistant", "content": full_recall_message})
+            print(full_recall_message)
+            return
 
         if not_found_objects:
             message = f"I couldn't find the following objects: {', '.join(not_found_objects)}."

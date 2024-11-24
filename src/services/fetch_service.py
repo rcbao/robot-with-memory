@@ -1,3 +1,5 @@
+# fetch_service.py
+
 from typing import Optional, Dict, List
 from services.location_oracle_service import Oracle
 from services.memory_service import MemoryService
@@ -51,17 +53,23 @@ class FetchService:
             message = f"Successfully fetched the {name} and placed it on the table."
             logger.info(message)
             print(message)
+            
+            # Check if object already exists in memory
             existing_object = self.memory_service.get_object(name)
-            if not existing_object:
+
+            location_record = {"text": f"{name} is on the table.", "coords": TARGET_COORDINATES}
+
+            if existing_object:
+                logger.info(f"Object '{name}' already exists in memory. Updating its location.")
+                self.memory_service.update_location(
+                    name=name,
+                    new_location=location_record
+                )
+            else:
                 self.memory_service.add_object(
                     name=name,
                     detail=detail,
-                    location={"text": f"{name} is on the table.", "coords": TARGET_COORDINATES}
-                )
-            else:
-                self.memory_service.update_location(
-                    name=name,
-                    new_location={"text": f"{name} is on the table.", "coords": TARGET_COORDINATES}
+                    location=location_record
                 )
             return True
 

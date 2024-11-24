@@ -77,6 +77,16 @@ Output: ```json
     "object_names": [],
     "detail": "What objects did I ask you to fetch in this session?"
 }}
+
+Input: """Thanks!"""
+Output: ```json
+{{
+    "relevancy": true,
+    "action": "generic",
+    "object_names": [],
+    "detail": "Thanks!"
+}}
+```
 ------------
 
 If the command is not relevant to fetching or observing, set `relevancy` to false. Output the JSON object below.

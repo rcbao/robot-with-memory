@@ -76,9 +76,9 @@ class RobotRotator:
 
         # Define target angles for each view in degrees
         target_angles = {
-            "left": 60,
-            "front": -60,
-            "right": -60
+            "left": 70,
+            "front": -70,
+            "right": -70
         }
 
         # Retrieve the target angle based on the view

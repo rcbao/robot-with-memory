@@ -6,6 +6,7 @@ from openai import OpenAI
 from typing import Tuple, Optional
 from dotenv import load_dotenv
 from prompt_builder import PromptBuilder
+from constants import OPENAI_MODEL
 
 load_dotenv()
 
@@ -25,12 +26,11 @@ class LanguageService:
 
     def get_llm_response(self, messages: list, max_tokens: int, temperature: float) -> str:
         """
-        Interact with the GPT-4o model and return a response.
+        Interact with the GPT-4 model and return a response.
         """
-
         try:
             response = self.client.chat.completions.create(
-                model="gpt-4o",
+                model=OPENAI_MODEL,
                 messages=messages,
                 max_tokens=max_tokens,
                 temperature=temperature,
@@ -101,9 +101,9 @@ class LanguageService:
 
     def write_generic_response(self, user_question: str, message_history: list = []) -> Optional[str]:
         """
-        Given the user's question, use LLM to generate a response with object information.
+        Given the user's question, use LLM to generate a generic response.
         """
-        # Build recall messages using PromptBuilder
+        # Build generic messages using PromptBuilder
         messages = self.prompt_builder.build_generic_messages(user_question, message_history)
 
         response_content = self.get_llm_response(
@@ -120,12 +120,11 @@ class LanguageService:
             return None
 
     def list_objects_in_scene_image(self, base64_image: str) -> list:
-
         # Create the message payload
         system_prompt, user_prompt = self.prompt_builder.build_image_parser_prompts()
         messages = [
             {
-                "role": "system", 
+                "role": "system",
                 "content": system_prompt
             },
             {
@@ -144,18 +143,23 @@ class LanguageService:
                 ],
             }
         ]
-        response = self.client.chat.completions.create(
-            model="gpt-4o",
-            messages=messages
-        )
-        response_text = response.choices[0].message.content.strip()
-        print("response_text::")
-        print(response_text)
-        response_text = self.prompt_builder.clean_up_json(response_text)
-        response = json.loads(response_text)
-        return response
+        try:
+            response = self.client.chat.completions.create(
+                model=OPENAI_MODEL,
+                messages=messages
+            )
+            response_text = response.choices[0].message.content.strip()
+            print("response_text::")
+            print(response_text)
+            response_text = self.prompt_builder.clean_up_json(response_text)
+            response = json.loads(response_text)
+            return response
+        except Exception as e:
+            print(f"Error in list_objects_in_scene_image: {e}")
+            return []
+
 
 if __name__ == "__main__":
-    lang = LanguageProcessor()
+    lang = LanguageService()
     output = lang.parse_user_input("what did we do so far?", [])
     print(output)
