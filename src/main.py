@@ -1,6 +1,6 @@
 import logging
 
-DEMO = True
+DEMO = False
 if DEMO:
     logging.disable(logging.CRITICAL)
 

@@ -16,7 +16,6 @@ from utils.init_env import add_object_to_scene_ycb, init_env
 def move_to_pose(planner, target_pose, dry_run=False):
     result = planner.move_to_pose_with_screw(target_pose, dry_run=dry_run)
     if result == -1:
-        print("move_to_pose_with_screw failed, falling back to move_to_pose_with_RRTConnect")
         result = planner.move_to_pose_with_RRTConnect(target_pose, dry_run=dry_run)
     return result != -1
 

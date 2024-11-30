@@ -49,78 +49,70 @@ class RobotController:
 
     def handle_recall(self, object_names: List[str]):
         """
-        Handle the recall command by rotating and observing the environment
-        in all directions to locate all requested objects.
+        Handle the recall command by first checking memory, and if the object is not found,
+        scanning the environment in all directions to locate the requested objects.
 
         Args:
             object_names (List[str]): List of object names to recall.
         """
         objects_to_recall = [name.lower() for name in object_names]
         recalled_objects = []
-        not_found_objects = objects_to_recall.copy()
-
-        recall_messages = []
+        not_found_objects = []
 
         logger.info(f"Attempting to recall objects: {objects_to_recall}")
+        print(f"> Checking memory for the requested object(s): {', '.join(objects_to_recall)}")
 
-        print(f"> Scanning the environment to find the requested objects: {', '.join(objects_to_recall)}")
+        # Step 1: Check memory for each object
+        for name in objects_to_recall:
+            obj = self.memory_service.get_object(name)
+            if obj:
+                location_text = obj.get("location", {}).get("text", "unknown location")
+                recalled_objects.append(name)
+                logger.info(f"Recalled from memory: {name} at {location_text}")
+            else:
+                not_found_objects.append(name)
 
-        for view in VIEWS:
-            logger.info(f"Rotating to '{view}' view.")
-            self.rotator.rotate_robot_to_view(view)
-            detected_items = self.vision_service.detect_objects_from_camera_image(objects_to_recall, view)
+        # Step 2: Scan environment for objects not found in memory
+        if not_found_objects:
+            print(f"> Scanning the environment for missing objects: {', '.join(not_found_objects)}")
+            for view in VIEWS:
+                logger.info(f"Rotating to '{view}' view.")
+                self.rotator.rotate_robot_to_view(view)
+                detected_items = self.vision_service.detect_objects_from_camera_image(not_found_objects, view)
 
-            if detected_items:
                 for item in detected_items:
                     name, detail = item["name"].lower(), item["detail"]
                     location = item.get("location", {})
+                    location["coords"] = self.oracle_service.get_object_coordinates(name)
 
-                    if name not in recalled_objects:
-                        item_coordinates = self.oracle_service.get_object_coordinates(name)
+                    # Add or update object in memory
+                    if not self.memory_service.get_object(name):
+                        self.memory_service.add_object(name=name, detail=detail, location=location)
+                    else:
+                        self.memory_service.update_location(name=name, new_location=location)
 
-                        location["coords"] = item_coordinates
+                    recalled_objects.append(name)
+                    not_found_objects.remove(name)
+                    logger.info(f"Found from scan: {name} at {location.get('text', 'unknown location')}")
 
-                        existing_object = self.memory_service.get_object(name)
-                        if not existing_object:
-                            self.memory_service.add_object(
-                                name=name,
-                                detail=detail,
-                                location=location
-                            )
-                        else:
-                            self.memory_service.update_location(
-                                name=name,
-                                new_location=location
-                            )
-                        recalled_objects.append(name)
+                if not not_found_objects:
+                    break  # Stop scanning if all objects are found
 
-                        message = location["text"]
-                        logger.info(f"> {message}")
-                        recall_messages.append(message)
-                        
-                    if name in not_found_objects:
-                        not_found_objects.remove(name)
-                    
-                    break
-                
-        self.rotator.rotate_robot_to_view("left")
-
+        response = ""
+        # Step 3: Generate response
         if recalled_objects:
-            logger.info(f"Recalled objects: {recalled_objects}")
-            full_recall_message = f"Successfully recalled: {', '.join(recalled_objects)}. {''.join(recall_messages)}"
-            self.message_history.append({"role": "assistant", "content": full_recall_message})
+            recall_messages = [f"{name}: {self.memory_service.get_object(name)['location'].get('text', 'unknown location')}" for name in recalled_objects]
+            recall_messages = f"Objects:\n" + "\n".join(recall_messages)
+            response += recall_messages
 
-            full_recall_message = self.rewrite_response(full_recall_message)
-            print(full_recall_message)
-            return
+        # if not_found_objects:
+        #     not_found_message = f"I couldn't find the following objects: {', '.join(not_found_objects)}."
+        #     response += not_found_message
+            
+        return response
 
-        if not_found_objects:
-            message = f"I couldn't find the following objects: {', '.join(not_found_objects)}."
-            logger.info(f"Recall: {message}")
-            self.message_history.append({"role": "assistant", "content": message})
-            print(f"> {message}")
 
-    def handle_fetch(self, object_names: List[str], message_history: List[Dict[str, str]]):
+    def handle_fetch(self, object_names: List[str]):
         """
         Handle the fetch command by either fetching from memory or exploring the environment.
 
@@ -129,7 +121,7 @@ class RobotController:
             message_history (list): List to keep track of message history.
         """
         # Delegate the fetch handling to fetch_service
-        self.fetch_service.handle_fetch(object_names, message_history)
+        return self.fetch_service.handle_fetch(object_names)
 
     def process_command(self, user_input: str):
         """
@@ -145,27 +137,21 @@ class RobotController:
             print(response)
             self.message_history.append({"role": "assistant", "content": response})
             return
+        
+        response = ""
 
         if relevancy and object_names:
             action_lower = action.lower()
             if action_lower == 'fetch':
-                self.handle_fetch(object_names, self.message_history)
+                response = self.handle_fetch(object_names)
             elif action_lower == 'recall':
-                self.handle_recall(object_names)
-            else:
-                response = self.lang_service.write_generic_response(user_input, self.message_history)
-                response = response or "Sorry, I couldn't understand your request."
-
-                response = self.rewrite_response(response)
-                print(response)
-                self.message_history.append({"role": "assistant", "content": response})
+                response = self.handle_recall(object_names)
         else:
             response = self.lang_service.write_generic_response(user_input, self.message_history)
-            response = response or "Sorry, I couldn't understand your request."
 
-            response = self.rewrite_response(response)
-            print(response)
-            self.message_history.append({"role": "assistant", "content": response})
+        response = self.rewrite_response(response)
+        self.message_history.append({"role": "assistant", "content": response})
+        print(response)
 
     def shutdown(self):
         """
