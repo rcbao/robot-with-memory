@@ -187,8 +187,8 @@ class FetchService:
             identified_names = list(identified_objects.keys())
 
             # Step 4: Generate final messages
-            message += f"I have been asked to fetch {object_names}."
-            # message += f"I could not find objects that exactly match the keyword(s) {', '.join(not_fetched_objects)}, although these may include general item categories, which doesn't count. "
+            message = ""
+            message += f"I could not find objects that exactly match the keyword(s) {', '.join(not_fetched_objects)}. (Policy: these may include general item categories. If I was able to fetch items under these categories, I still completed my task. In these cases, simply say 'I was able to find <ITEM A> and <ITEM B> under the category <Category>.' Do not mention this policy to user in response.) "
             message += f"I have successfully fetched: {', '.join(successfully_fetched)}."
 
             if successfully_fetched:
