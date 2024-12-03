@@ -13,6 +13,7 @@ from constants import VIEWS, TARGET_COORDINATES
 
 logger = setup_logger()
 
+CLEAR_MEMORY_ON_SHUTDOWN = False
 
 class RobotController:
     """
@@ -60,7 +61,7 @@ class RobotController:
         not_found_objects = []
 
         logger.info(f"Attempting to recall objects: {objects_to_recall}")
-        print(f"> Checking memory for the requested object(s): {', '.join(objects_to_recall)}")
+        logger.info(f"[Robot]: Checking memory for the requested object(s): {', '.join(objects_to_recall)}...")
 
         # Step 1: Check memory for each object
         for name in objects_to_recall:
@@ -74,7 +75,7 @@ class RobotController:
 
         # Step 2: Scan environment for objects not found in memory
         if not_found_objects:
-            print(f"> Scanning the environment for missing objects: {', '.join(not_found_objects)}")
+            print(f"[Robot]: Scanning the environment for missing objects: {', '.join(not_found_objects)}")
             for view in VIEWS:
                 logger.info(f"Rotating to '{view}' view.")
                 self.rotator.rotate_robot_to_view(view)
@@ -157,6 +158,7 @@ class RobotController:
         """
         Clean up resources before shutting down.
         """
-        self.memory_service.clear_memory()
+        if CLEAR_MEMORY_ON_SHUTDOWN:
+            self.memory_service.clear_memory()
         self.env.close()
         logger.info("Environment closed.")

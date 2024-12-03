@@ -176,7 +176,7 @@ class LanguageService:
         user_prompt = (
             f"Input text: {input_text} \n"
             f"------ \n"
-            f"Rewrite the above response."
+            f"Rewrite the above response. Output the improved response only."
         )
 
         messages = [

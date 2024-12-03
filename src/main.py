@@ -1,6 +1,6 @@
 import logging
 
-DEMO = False
+DEMO = True
 if DEMO:
     logging.disable(logging.CRITICAL)
 
@@ -43,6 +43,7 @@ def main():
                 break
 
             controller.process_command(user_input)
+            print("")
 
     except KeyboardInterrupt:
         print("\nExiting. Goodbye!")

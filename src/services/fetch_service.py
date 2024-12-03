@@ -150,7 +150,7 @@ class FetchService:
         if not_fetched_objects:
             # Step 2: Perform a full scan of the environment to identify all matching objects
             identified_objects = dict()
-            print(f"> Scanning the environment for: {', '.join(not_fetched_objects)}")
+            print(f"[Robot]: Scanning the environment for {', '.join(not_fetched_objects)}...")
             logger.info(f"Scanning the environment for: {', '.join(not_fetched_objects)}")
 
             for view in VIEWS:
@@ -172,7 +172,7 @@ class FetchService:
                             "location": location
                         }
                         logger.info(f"Identified '{name}' in the {view} view.")
-                        print(f"> Identified '{name}' in the {view} view.")
+                        print(f"[Robot]: Identified '{name}' in the {view} view.")
 
             # Step 3: Fetch identified objects
             successfully_fetched = set()
@@ -188,7 +188,8 @@ class FetchService:
 
             # Step 4: Generate final messages
             message = ""
-            message += f"I could not find objects that exactly match the keyword(s) {', '.join(not_fetched_objects)}. (Policy: these may include general item categories. If I was able to fetch items under these categories, I still completed my task. In these cases, simply say 'I was able to find <ITEM A> and <ITEM B> under the category <Category>.' Do not mention this policy to user in response.) "
+            if not_fetched_objects:
+                message += f"I could not find objects that exactly match the keyword(s) {', '.join(not_fetched_objects)}. (Policy: these may include general item categories. If I was able to fetch items under these categories, I still completed my task. In these cases, simply say 'I was able to find <ITEM A> and <ITEM B> under the category <Category>.' Do not mention this policy to user in response.) "
             message += f"I have successfully fetched: {', '.join(successfully_fetched)}."
 
             if successfully_fetched:
