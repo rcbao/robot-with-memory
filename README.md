@@ -141,7 +141,7 @@ It did build character. 😄
 ## **Acknowledgments**
 
 - Our professor, Yen-Ling Kuo, was extremely helpful and generous with her time in answering questions. Her advice (e.g., using the YCB dataset) sped up our progress by a lot and make it possible to be completed on time.
-- The ManySkill maintainers, especially Stone Tao, was super responsive and helpful in answering questions. Thank you, and we are grateful 🙏
+- The ManySkill maintainers, especially Stone Tao, was super responsive and helpful in answering questions. Thank you, and we are grateful. 🙏
 
 This project is a Robert Bao and Jade Gregoire production. It was made for UVA's CS 6501, [Learning for Interative Robots](https://ylkuo.notion.site/Learning-for-Interactive-Robots-Fall-2024-86af804431f24a2ba49925d9a4495d69).
 
