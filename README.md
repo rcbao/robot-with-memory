@@ -12,17 +12,17 @@ This project wouldn't have been possible just two years ago (e.g., 2023), and it
 </p>
 
 ## Main Components
-- **Franka Emika Panda robot** – A popular arm-only robot. We customized it with a front-facing camera, so it can see its surroundings.
-- **Vision-Language Model (VLM)** – OpenAI GPT-4o, which processes camera images and "talks" to user in natural language
-- **Motion Planner** – Helped implement precise robotic arm control. Based on Screw theory & RRT
-- **Memory Store** – A lightweight JSON-based database for storing object location
-- **Simulated Environment** – Two small shelves stocked with everyday objects (e.g., apple, banana, Rubik’s Cube, etc.)
+- **Franka Emika Panda robot**:  A popular arm-only robot. We customized it with a front-facing camera, so it can see its surroundings.
+- **Vision-Language Model (VLM)**:  OpenAI GPT-4o, which processes camera images and "talks" to user in natural language
+- **Motion Planner**:  Helped implement precise robotic arm control. Based on Screw theory & RRT
+- **Memory Store**:  A lightweight JSON-based database for storing object location
+- **Simulated Environment**:  Two small shelves stocked with everyday objects (e.g., apple, banana, Rubik’s Cube, etc.)
 
 ## How It Works
 - The robot **remembers and retrieves objects** through a combination of VLM parsing, motion planning, and stored memory.
 - It interprets natural language commands and tries to match inputs like *"get the garbage can"* to objects it has seen.
 - If an object is missing from memory, it would **actively scans the environment** to locate it.
-- It can also handle general questions like *“What have you fetched so far?”*, which makes the user experience more natural and interactive.
+- The robot/VLM alsos handle general questions like *“What have you fetched so far?”*, which makes the user experience more interactive.
 
 
 ## Gallery
