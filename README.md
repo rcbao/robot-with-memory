@@ -13,7 +13,7 @@ This project wouldn't have been possible just two years ago (e.g., 2023), and it
 
 ## Main Components
 - **Franka Emika Panda robot**:  A popular arm-only robot. We customized it with a front-facing camera, so it can see its surroundings.
-- **Vision-Language Model (VLM)**:  OpenAI GPT-4o, which processes camera images and "talks" to user in natural language
+- **Vision-Language Model (VLM)**: Processes camera images and "talks" to user in natural language. We used OpenAI GPT-4o.
 - **Motion Planner**:  Helped implement precise robotic arm control. Based on Screw theory & RRT
 - **Memory Store**:  A lightweight JSON-based database for storing object location
 - **Simulated Environment**:  Two small shelves stocked with everyday objects (e.g., apple, banana, Rubik’s Cube, etc.)
