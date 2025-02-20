@@ -21,7 +21,7 @@ This project wouldn't have been possible just two years ago (e.g., 2023), and it
 ## How It Works
 - The robot **remembers and retrieves objects** through a combination of VLM parsing, motion planning, and stored memory.
 - It interprets natural language commands and tries to match inputs like *"get the garbage can"* to objects it has seen.
-- If an object is missing from memory, it would **actively scans the environment** to locate it.
+- If an object is missing from memory, it would *actively scans the environment* to locate it.
 - The robot/VLM alsos handle general questions like *“What have you fetched so far?”*, which makes the user experience more interactive.
 
 
@@ -60,7 +60,7 @@ https://github.com/user-attachments/assets/22151713-fd04-4841-a04c-eb98f8d871ea
 
 ### Workaround for Panda Wrist Camera Issue
 
-A known issue in ManiSkill prevents the **Panda wrist camera** from correctly overriding agent configurations. To fix this issue, you must update your panda_wristcam.py file. To get this file's location, run: 
+A known issue in ManiSkill prevents the Panda wrist camera from correctly overriding agent configurations. To fix this issue, you must directly update your panda_wristcam.py file. To get this file's location, run: 
 ```python
 import inspect
 from mani_skill.agents.robots import PandaWristCam
@@ -69,7 +69,7 @@ path = inspect.getfile(PandaWristCam)
 print("Absolute path of PandaWristCam:", path)
 ```
 
-Replace its contents with the following:
+Then, replace its contents with the following:
 
 ```python
 import numpy as np
@@ -124,9 +124,9 @@ class PandaWristCam(Panda):
         ]
 ```
 
-### Explanation
-- **`USE_FRONT_CAMERA` Flag**: Enables using the front camera mounted on `panda_link2`.
-- **Bug Fix**: Adjusts the sensor configuration to avoid overriding issues.
+**Explanation:**
+- **What does the fix do**: It adjusts the sensor configuration directly at a low level, and it helps avoid overriding issues.
+- **`USE_FRONT_CAMERA` Flag**: It enables using the front camera mounted on `panda_link2`. By using a feature flag, it avoids changing the original code and makes it easier to revert back to the default behavior if needed.
 
 ## Challenges We Encountered
 While building this project, we worked through a variety of tough engineering challenges:
@@ -143,7 +143,7 @@ It did build character. 😄
 - Our professor, Yen-Ling Kuo, was extremely helpful and generous with her time in answering questions. Her advice (e.g., using the YCB dataset) sped up our progress by a lot and make it possible to be completed on time.
 - The ManySkill maintainers, especially Stone Tao, was super responsive and helpful in answering questions. Thank you, and we are grateful 🙏
 
-This project is a Robert Bao and Jade Gregoire production. It was built for UVA's CS 6501, [Learning for Interative Robots](https://ylkuo.notion.site/Learning-for-Interactive-Robots-Fall-2024-86af804431f24a2ba49925d9a4495d69).
+This project is a Robert Bao and Jade Gregoire production. It was made for UVA's CS 6501, [Learning for Interative Robots](https://ylkuo.notion.site/Learning-for-Interactive-Robots-Fall-2024-86af804431f24a2ba49925d9a4495d69).
 
 ## License
 MIT License
