@@ -22,7 +22,7 @@ This project wouldn't have been possible just two years ago (e.g., 2023), and it
 - The robot **remembers and retrieves objects** through a combination of VLM parsing, motion planning, and stored memory.
 - It interprets natural language commands and tries to match inputs like *"get the garbage can"* to objects it has seen.
 - If an object is missing from memory, it would **actively scans the environment** to locate it.
-- It **handles general queries** like *“What have you fetched so far?”* for a more interactive experience.
+- It can also handle general questions like *“What have you fetched so far?”*, which makes the user experience more natural and interactive.
 
 
 ## Gallery
