@@ -4,7 +4,7 @@
 
 The project sets up a customized Franka Panda robot in a structured environment. With the help of the VLM and a lightweight memory store, the robot can observe its surroundings, remember object locations, and retrieve them with its arm on command. 
 
-This project wouldn't have been possible just two years ago (e.g., 2023), and it shows how much the technologies have improved and are enabling applications like this. In an aging society, we think robots with memory -- like a more mature version of this project -- could help many people with memory and mobility issues and make their lives easier. 🙂
+This project wouldn't have been possible just two years ago (e.g., 2023), and it shows how much the technologies have improved and are enabling applications like this. In an aging society, we think robots with memory -- like a mature version of this project -- could help many people with memory and mobility issues and make their lives easier. 🙂
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/61378027-a152-46e5-978a-5a2abf57895e" width="40%" style="margin-right: 5%;" />
@@ -13,15 +13,15 @@ This project wouldn't have been possible just two years ago (e.g., 2023), and it
 
 ## Main Components
 - **Franka Emika Panda robot**:  A popular arm-only robot. We customized it with a front-facing camera, so it can see its surroundings.
-- **Vision-Language Model (VLM)**: Processes camera images and "talks" to user in natural language. We used OpenAI GPT-4o.
+- **Vision-Language Model (VLM)**: Processes camera images and "talks" to user in natural language. We used GPT-4o.
 - **Motion Planner**:  Helped implement precise robotic arm control. Based on Screw theory & RRT
 - **Memory Store**:  A lightweight JSON-based database for storing object location
 - **Simulated Environment**:  Two small shelves stocked with everyday objects (e.g., apple, Rubik’s Cube, etc.)
 
 ## How It Works
-- The robot remembers and retrieves objects through a combination of VLM parsing, motion planning, and stored memory.
-- It interprets natural language commands and tries to match inputs like *"get the garbage can"* to objects it has seen.
-- If an object is missing from memory, it would *actively scans the environment* to locate it.
+- The robot remembers and fetchs objects through a combination of VLM parsing, motion planning, and stored memory.
+- It parses natural language commands and tries to match inputs like *"get the banana"* to objects it has seen.
+- If an object is missing from memory, it would actively scan the environment to locate it.
 - The robot/VLM alsos handle general questions like *“What have you fetched so far?”*, which makes the user experience more interactive.
 
 
