@@ -14,7 +14,7 @@ This project wouldn't have been possible just two years ago (e.g., 2023), and it
 ## Main Components
 - **Franka Emika Panda robot**:  A popular arm-only robot. We customized it with a front-facing camera, so it can see its surroundings.
 - **Vision-Language Model (VLM)**: Processes camera images and "talks" to user in natural language. We used GPT-4o.
-- **Motion Planner**:  Helped implement precise robotic arm control. Based on Screw theory & RRT
+- **Motion Planner**:  Helped plan robotic arm movements; based on Screw and RRT
 - **Memory Store**:  A lightweight JSON-based database for storing object location
 - **Simulated Environment**:  Two small shelves stocked with everyday objects (e.g., apple, Rubik’s Cube, etc.)
 
@@ -134,7 +134,7 @@ While building this project, we worked through a variety of tough engineering ch
 1. [Maniskill](https://www.maniskill.ai/), the robotics framework we used, is a new and built by a small team. Thus, at the time of development, it has very limited documentation. As a result, debugging was at times very difficult, and none of the AI coding assistants was helpful due to frequent and severe hallucinations caused by lack of training data. We often had to debug by reading the framework’s source code to figure out how things worked.
 2. GPT-4o was helpful for detecting objects, but occasional hallucinations in parsing object descriptions made the system less reliable. To address this issue, we iteratively improved the VLM prompt, and improved command accuracy to be good enough for our use case.
 
-We learned a lot from doing all of this, and got much better at debugging, finding resources online, and writing prompts. We think we became much better engineers after the project. 
+We learned a lot from doing all of this, and got much better at debugging, finding resources online, and writing prompts. We think we became better engineers after the project. 
 
 It did build character. 😄
 
